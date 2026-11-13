@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
+import io.github.eastezz.fairshare.member.DuplicateMemberNameException;
 
 /**
  * Turns exceptions from any controller into clean JSON error responses.
@@ -25,6 +26,14 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleGroupNotFound(GroupNotFoundException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
 		problem.setTitle("Not Found");
+		return problem;
+	}
+
+	/** Member name already used in this group: 409 Conflict. */
+	@ExceptionHandler(DuplicateMemberNameException.class)
+	public ProblemDetail handleDuplicateMemberName(DuplicateMemberNameException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+		problem.setTitle("Conflict");
 		return problem;
 	}
 
