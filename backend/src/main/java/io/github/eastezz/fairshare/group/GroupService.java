@@ -2,10 +2,8 @@ package io.github.eastezz.fairshare.group;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Business logic for groups. The controller only handles HTTP; this class talks to the
@@ -33,12 +31,12 @@ public class GroupService {
 		return groupRepository.findAll().stream().map(GroupResponse::from).toList();
 	}
 
-	/** Returns one group, or answers 404 Not Found if the id does not exist. */
+	/** Returns one group, or throws GroupNotFoundException (404) if the id does not exist. */
 	@Transactional(readOnly = true)
 	public GroupResponse findById(Long id) {
 		return groupRepository.findById(id)
 			.map(GroupResponse::from)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group " + id + " not found"));
+			.orElseThrow(() -> new GroupNotFoundException(id));
 	}
 
 }
