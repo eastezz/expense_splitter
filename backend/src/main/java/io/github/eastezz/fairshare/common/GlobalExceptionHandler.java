@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import io.github.eastezz.fairshare.expense.InvalidExpenseException;
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
 import io.github.eastezz.fairshare.member.DuplicateMemberNameException;
 
@@ -34,6 +35,14 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleDuplicateMemberName(DuplicateMemberNameException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 		problem.setTitle("Conflict");
+		return problem;
+	}
+
+	/** Expense that breaks a business rule (for example shares that don't add up): 400 Bad Request. */
+	@ExceptionHandler(InvalidExpenseException.class)
+	public ProblemDetail handleInvalidExpense(InvalidExpenseException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+		problem.setTitle("Invalid expense");
 		return problem;
 	}
 
