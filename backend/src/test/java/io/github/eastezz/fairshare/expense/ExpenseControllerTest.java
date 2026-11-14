@@ -1,18 +1,22 @@
 package io.github.eastezz.fairshare.expense;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -34,6 +38,10 @@ class ExpenseControllerTest {
 
 	@Autowired
 	private MemberRepository memberRepository;
+
+	/** Plain SQL access, used to check that the shares are really gone from the table. */
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	private Long groupId;
 
@@ -165,6 +173,57 @@ class ExpenseControllerTest {
 			.andExpect(jsonPath("$[1].description").value("Museum"))
 			.andExpect(jsonPath("$[1].shares.length()").value(3))
 			.andExpect(jsonPath("$[1].shares[2].shareCents").value(800));
+	}
+
+	/** Creates an equal "Dinner" expense shared by Anna and Ben and returns its id. */
+	private long createDinner() throws Exception {
+		String body = postExpense(groupId, equalExpense("Dinner", 1000, anna, anna, ben))
+			.andExpect(status().isCreated())
+			.andReturn().getResponse().getContentAsString();
+		return ((Number) JsonPath.read(body, "$.id")).longValue();
+	}
+
+	@Test
+	void getReturnsOneExpense() throws Exception {
+		long expenseId = createDinner();
+
+		mockMvc.perform(get("/api/groups/" + groupId + "/expenses/" + expenseId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(expenseId))
+			.andExpect(jsonPath("$.description").value("Dinner"))
+			.andExpect(jsonPath("$.shares.length()").value(2))
+			.andExpect(jsonPath("$.shares[1].memberName").value("Ben"))
+			.andExpect(jsonPath("$.shares[1].shareCents").value(500));
+	}
+
+	@Test
+	void getUnknownExpenseReturns404() throws Exception {
+		mockMvc.perform(get("/api/groups/" + groupId + "/expenses/999999"))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.detail").value("Expense 999999 not found in group " + groupId));
+	}
+
+	@Test
+	void getExpenseThroughWrongGroupReturns404() throws Exception {
+		long expenseId = createDinner();
+		Long otherGroupId = groupRepository.save(new Group("Flat 3B")).getId();
+
+		mockMvc.perform(get("/api/groups/" + otherGroupId + "/expenses/" + expenseId))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void deleteReturns204AndRemovesExpenseWithShares() throws Exception {
+		long expenseId = createDinner();
+
+		mockMvc.perform(delete("/api/groups/" + groupId + "/expenses/" + expenseId))
+			.andExpect(status().isNoContent());
+
+		mockMvc.perform(get("/api/groups/" + groupId + "/expenses/" + expenseId))
+			.andExpect(status().isNotFound());
+		Integer sharesLeft = jdbcTemplate.queryForObject(
+				"select count(*) from expense_shares where expense_id = ?", Integer.class, expenseId);
+		assertThat(sharesLeft).isZero();
 	}
 
 }

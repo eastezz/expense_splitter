@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import io.github.eastezz.fairshare.expense.ExpenseNotFoundException;
 import io.github.eastezz.fairshare.expense.InvalidExpenseException;
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
 import io.github.eastezz.fairshare.member.DuplicateMemberNameException;
@@ -25,6 +26,14 @@ public class GlobalExceptionHandler {
 	/** Unknown group id: 404 Not Found. */
 	@ExceptionHandler(GroupNotFoundException.class)
 	public ProblemDetail handleGroupNotFound(GroupNotFoundException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+		problem.setTitle("Not Found");
+		return problem;
+	}
+
+	/** Unknown expense id (or an expense of another group): 404 Not Found. */
+	@ExceptionHandler(ExpenseNotFoundException.class)
+	public ProblemDetail handleExpenseNotFound(ExpenseNotFoundException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
 		problem.setTitle("Not Found");
 		return problem;

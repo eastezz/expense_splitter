@@ -72,6 +72,22 @@ public class ExpenseService {
 		return expenseRepository.findByGroupIdOrderByIdAsc(groupId).stream().map(ExpenseResponse::from).toList();
 	}
 
+	/** Returns one expense of a group. 404 if it doesn't exist or belongs to another group. */
+	@Transactional(readOnly = true)
+	public ExpenseResponse findById(Long groupId, Long expenseId) {
+		return ExpenseResponse.from(findExpenseOfGroup(groupId, expenseId));
+	}
+
+	/** Deletes one expense; its shares are deleted with it (cascade). 404 like findById. */
+	public void delete(Long groupId, Long expenseId) {
+		expenseRepository.delete(findExpenseOfGroup(groupId, expenseId));
+	}
+
+	private Expense findExpenseOfGroup(Long groupId, Long expenseId) {
+		return expenseRepository.findByIdAndGroupId(expenseId, groupId)
+			.orElseThrow(() -> new ExpenseNotFoundException(groupId, expenseId));
+	}
+
 	/** Uses the split type to turn the requested shares into cents per member id. */
 	private Map<Long, Long> calculateShares(CreateExpenseRequest request) {
 		if (request.splitType() == SplitType.EQUAL) {

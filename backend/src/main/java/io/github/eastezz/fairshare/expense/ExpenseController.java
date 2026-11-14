@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +38,19 @@ public class ExpenseController {
 	@GetMapping
 	public List<ExpenseResponse> list(@PathVariable Long groupId) {
 		return expenseService.findByGroup(groupId);
+	}
+
+	/** GET /api/groups/{groupId}/expenses/{expenseId}: returns one expense. */
+	@GetMapping("/{expenseId}")
+	public ExpenseResponse get(@PathVariable Long groupId, @PathVariable Long expenseId) {
+		return expenseService.findById(groupId, expenseId);
+	}
+
+	/** DELETE /api/groups/{groupId}/expenses/{expenseId}: deletes the expense, answers 204 No Content. */
+	@DeleteMapping("/{expenseId}")
+	public ResponseEntity<Void> delete(@PathVariable Long groupId, @PathVariable Long expenseId) {
+		expenseService.delete(groupId, expenseId);
+		return ResponseEntity.noContent().build();
 	}
 
 }

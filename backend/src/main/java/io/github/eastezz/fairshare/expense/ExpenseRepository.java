@@ -1,6 +1,7 @@
 package io.github.eastezz.fairshare.expense;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,5 +15,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 	 */
 	@EntityGraph(attributePaths = { "shares", "shares.member" })
 	List<Expense> findByGroupIdOrderByIdAsc(Long groupId);
+
+	/** One expense, but only if it belongs to the given group: WHERE id = ? AND group_id = ?. */
+	@EntityGraph(attributePaths = { "shares", "shares.member" })
+	Optional<Expense> findByIdAndGroupId(Long id, Long groupId);
 
 }
