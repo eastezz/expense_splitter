@@ -14,6 +14,7 @@ import io.github.eastezz.fairshare.expense.ExpenseNotFoundException;
 import io.github.eastezz.fairshare.expense.InvalidExpenseException;
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
 import io.github.eastezz.fairshare.member.DuplicateMemberNameException;
+import io.github.eastezz.fairshare.payment.InvalidPaymentException;
 
 /**
  * Turns exceptions from any controller into clean JSON error responses.
@@ -52,6 +53,14 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleInvalidExpense(InvalidExpenseException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
 		problem.setTitle("Invalid expense");
+		return problem;
+	}
+
+	/** Payment that breaks a business rule (for example a member paying themselves): 400 Bad Request. */
+	@ExceptionHandler(InvalidPaymentException.class)
+	public ProblemDetail handleInvalidPayment(InvalidPaymentException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+		problem.setTitle("Invalid payment");
 		return problem;
 	}
 

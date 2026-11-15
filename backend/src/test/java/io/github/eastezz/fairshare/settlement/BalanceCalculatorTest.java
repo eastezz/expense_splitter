@@ -24,7 +24,7 @@ class BalanceCalculatorTest {
 				new ExpenseEntry(ANNA, 9000, Map.of(ANNA, 3000L, BEN, 3000L, CEM, 3000L)),
 				new ExpenseEntry(BEN, 3000, Map.of(ANNA, 1000L, BEN, 1000L, CEM, 1000L)));
 
-		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses);
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, List.of());
 
 		assertThat(balances).containsExactly(Map.entry(ANNA, 5000L), Map.entry(BEN, -1000L), Map.entry(CEM, -4000L));
 	}
@@ -34,7 +34,7 @@ class BalanceCalculatorTest {
 		// Anna pays 20.00 for Ben and Cem only.
 		List<ExpenseEntry> expenses = List.of(new ExpenseEntry(ANNA, 2000, Map.of(BEN, 1000L, CEM, 1000L)));
 
-		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses);
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, List.of());
 
 		assertThat(balances).containsExactly(Map.entry(ANNA, 2000L), Map.entry(BEN, -1000L), Map.entry(CEM, -1000L));
 	}
@@ -43,14 +43,14 @@ class BalanceCalculatorTest {
 	void memberWithoutExpensesStaysAtZero() {
 		List<ExpenseEntry> expenses = List.of(new ExpenseEntry(ANNA, 500, Map.of(ANNA, 250L, BEN, 250L)));
 
-		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses);
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, List.of());
 
 		assertThat(balances).containsEntry(CEM, 0L);
 	}
 
 	@Test
 	void noExpensesMeansEveryoneIsAtZeroInIdOrder() {
-		Map<Long, Long> balances = calculator.calculate(List.of(CEM, ANNA, BEN), List.of());
+		Map<Long, Long> balances = calculator.calculate(List.of(CEM, ANNA, BEN), List.of(), List.of());
 
 		assertThat(balances).containsExactly(Map.entry(ANNA, 0L), Map.entry(BEN, 0L), Map.entry(CEM, 0L));
 	}
@@ -63,7 +63,7 @@ class BalanceCalculatorTest {
 				new ExpenseEntry(BEN, 12345, Map.of(ANNA, 5000L, CEM, 7345L)),
 				new ExpenseEntry(ANNA, 1, Map.of(CEM, 1L)));
 
-		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses);
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, List.of());
 
 		assertThat(balances.values().stream().mapToLong(Long::longValue).sum()).isZero();
 	}
@@ -72,7 +72,41 @@ class BalanceCalculatorTest {
 	void expenseWithUnknownMemberIsRejected() {
 		List<ExpenseEntry> expenses = List.of(new ExpenseEntry(99L, 100, Map.of(ANNA, 100L)));
 
-		assertThatThrownBy(() -> calculator.calculate(List.of(ANNA, BEN), expenses))
+		assertThatThrownBy(() -> calculator.calculate(List.of(ANNA, BEN), expenses, List.of()))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("99");
+	}
+
+	@Test
+	void paymentMovesBothBalancesTowardsZero() {
+		List<ExpenseEntry> expenses = List.of(
+				new ExpenseEntry(ANNA, 9000, Map.of(ANNA, 3000L, BEN, 3000L, CEM, 3000L)),
+				new ExpenseEntry(BEN, 3000, Map.of(ANNA, 1000L, BEN, 1000L, CEM, 1000L)));
+		// Ben pays Anna back 10.00.
+		List<PaymentEntry> payments = List.of(new PaymentEntry(BEN, ANNA, 1000));
+
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, payments);
+
+		assertThat(balances).containsExactly(Map.entry(ANNA, 4000L), Map.entry(BEN, 0L), Map.entry(CEM, -4000L));
+	}
+
+	@Test
+	void payingAllSuggestedTransfersSettlesEveryone() {
+		List<ExpenseEntry> expenses = List.of(
+				new ExpenseEntry(ANNA, 9000, Map.of(ANNA, 3000L, BEN, 3000L, CEM, 3000L)),
+				new ExpenseEntry(BEN, 3000, Map.of(ANNA, 1000L, BEN, 1000L, CEM, 1000L)));
+		List<PaymentEntry> payments = List.of(new PaymentEntry(CEM, ANNA, 4000), new PaymentEntry(BEN, ANNA, 1000));
+
+		Map<Long, Long> balances = calculator.calculate(List.of(ANNA, BEN, CEM), expenses, payments);
+
+		assertThat(balances).containsExactly(Map.entry(ANNA, 0L), Map.entry(BEN, 0L), Map.entry(CEM, 0L));
+	}
+
+	@Test
+	void paymentWithUnknownMemberIsRejected() {
+		List<PaymentEntry> payments = List.of(new PaymentEntry(ANNA, 99L, 100));
+
+		assertThatThrownBy(() -> calculator.calculate(List.of(ANNA, BEN), List.of(), payments))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("99");
 	}

@@ -20,12 +20,16 @@ public class BalanceCalculator {
 
 	/**
 	 * Every member starts at 0. For each expense the payer gets +amountCents and every
-	 * member who shares it gets -shareCents. Members without any expenses stay at 0.
+	 * member who shares it gets -shareCents. For each payment the member who paid gets
+	 * +amountCents (they paid back some of what they owe) and the member who received it
+	 * gets -amountCents (the group owes them that much less).
+	 * Members without any expenses or payments stay at 0.
 	 *
 	 * @return member id -> balance in cents, ordered by member id
-	 * @throws IllegalArgumentException if an expense mentions a member who is not in memberIds
+	 * @throws IllegalArgumentException if an expense or payment mentions a member who is not in memberIds
 	 */
-	public Map<Long, Long> calculate(Collection<Long> memberIds, List<ExpenseEntry> expenses) {
+	public Map<Long, Long> calculate(Collection<Long> memberIds, List<ExpenseEntry> expenses,
+			List<PaymentEntry> payments) {
 		List<Long> sorted = new ArrayList<>(memberIds);
 		sorted.sort(null);
 		Map<Long, Long> balances = new LinkedHashMap<>();
@@ -37,6 +41,10 @@ public class BalanceCalculator {
 			for (Map.Entry<Long, Long> share : expense.sharesByMemberId().entrySet()) {
 				add(balances, share.getKey(), -share.getValue());
 			}
+		}
+		for (PaymentEntry payment : payments) {
+			add(balances, payment.fromMemberId(), payment.amountCents());
+			add(balances, payment.toMemberId(), -payment.amountCents());
 		}
 		return balances;
 	}

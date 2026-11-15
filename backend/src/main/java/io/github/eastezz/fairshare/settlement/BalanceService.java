@@ -14,10 +14,11 @@ import io.github.eastezz.fairshare.group.GroupNotFoundException;
 import io.github.eastezz.fairshare.group.GroupRepository;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
+import io.github.eastezz.fairshare.payment.PaymentRepository;
 
 /**
- * Loads a group's members and expenses from the database, turns the expenses into plain
- * ExpenseEntry records and lets BalanceCalculator do the maths.
+ * Loads a group's members, expenses and payments from the database, turns them into plain
+ * ExpenseEntry and PaymentEntry records and lets BalanceCalculator do the maths.
  * Read-only: it never changes anything in the database.
  */
 @Service
@@ -30,13 +31,17 @@ public class BalanceService {
 
 	private final ExpenseRepository expenseRepository;
 
+	private final PaymentRepository paymentRepository;
+
 	private final BalanceCalculator balanceCalculator;
 
 	public BalanceService(GroupRepository groupRepository, MemberRepository memberRepository,
-			ExpenseRepository expenseRepository, BalanceCalculator balanceCalculator) {
+			ExpenseRepository expenseRepository, PaymentRepository paymentRepository,
+			BalanceCalculator balanceCalculator) {
 		this.groupRepository = groupRepository;
 		this.memberRepository = memberRepository;
 		this.expenseRepository = expenseRepository;
+		this.paymentRepository = paymentRepository;
 		this.balanceCalculator = balanceCalculator;
 	}
 
@@ -52,7 +57,14 @@ public class BalanceService {
 			.map(BalanceService::toEntry)
 			.toList();
 
-		Map<Long, Long> balances = balanceCalculator.calculate(members.stream().map(Member::getId).toList(), expenses);
+		List<PaymentEntry> payments = paymentRepository.findByGroupIdOrderByIdAsc(groupId)
+			.stream()
+			.map(payment -> new PaymentEntry(payment.getFromMember().getId(), payment.getToMember().getId(),
+					payment.getAmountCents()))
+			.toList();
+
+		Map<Long, Long> balances = balanceCalculator.calculate(members.stream().map(Member::getId).toList(), expenses,
+				payments);
 		return members.stream()
 			.map(member -> new BalanceResponse(member.getId(), member.getName(), balances.get(member.getId())))
 			.toList();
