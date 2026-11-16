@@ -22,6 +22,7 @@ function GroupsPage() {
     <section>
       <h2>Groups</h2>
       {loading && <p>Loading groups…</p>}
+      {!loading && groups.length === 0 && <p>No groups yet.</p>}
       <ul>
         {groups.map((group) => (
           <li key={group.id}>{group.name}</li>
