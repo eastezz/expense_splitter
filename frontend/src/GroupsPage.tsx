@@ -45,7 +45,9 @@ function GroupsPage() {
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-        <button type="submit">Create group</button>
+        <button type="submit" disabled={name.trim() === ''}>
+          Create group
+        </button>
       </form>
     </section>
   )
