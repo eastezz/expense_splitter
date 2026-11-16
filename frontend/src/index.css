@@ -1,4 +1,33 @@
+/* Base styles for the whole app: font, colors and a centered column. */
+
+:root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1f2328;
+  background-color: #f6f8fa;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+}
+
+/* The page content sits in one centered column that never gets too wide. */
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+}
+
+p {
+  margin: 0 0 1rem;
 }
