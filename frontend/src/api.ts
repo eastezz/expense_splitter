@@ -11,3 +11,27 @@ export async function listGroups(): Promise<Group[]> {
   const response = await fetch('/api/groups')
   return response.json()
 }
+
+/** The error body Spring Boot sends (a "ProblemDetail"). We only need two fields. */
+type ProblemDetail = {
+  title?: string
+  detail?: string
+}
+
+/**
+ * Does nothing if the response is OK (status 200-299).
+ * Otherwise throws an Error with the backend's message.
+ */
+export async function throwIfNotOk(response: Response): Promise<void> {
+  if (response.ok) {
+    return
+  }
+  let message = `Request failed with status ${response.status}`
+  try {
+    const problem: ProblemDetail = await response.json()
+    message = problem.detail ?? problem.title ?? message
+  } catch {
+    // The body was not JSON, so we keep the default message.
+  }
+  throw new Error(message)
+}
