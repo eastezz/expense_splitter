@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import GroupsPage from './GroupsPage'
 
@@ -47,5 +48,32 @@ describe('GroupsPage', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Could not load groups: Database is down')
     expect(screen.queryByText('No groups yet.')).not.toBeInTheDocument()
+  })
+
+  it('creates a group and adds it to the list', async () => {
+    // First call (GET /api/groups): no groups yet.
+    // Second call (POST /api/groups): the backend returns the saved group.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json([]))
+      .mockResolvedValueOnce(Response.json({ id: 7, name: 'Trip to Berlin' }, { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<GroupsPage />)
+    await screen.findByText('No groups yet.')
+
+    const input = screen.getByLabelText('New group name')
+    await user.type(input, 'Trip to Berlin')
+    await user.click(screen.getByRole('button', { name: 'Create group' }))
+
+    expect(await screen.findByText('Trip to Berlin')).toBeInTheDocument()
+    expect(input).toHaveValue('')
+    // The page really sent a POST with the name we typed.
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Trip to Berlin' }),
+    })
   })
 })
