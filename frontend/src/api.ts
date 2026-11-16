@@ -104,3 +104,32 @@ export async function listExpenses(groupId: number): Promise<Expense[]> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/**
+ * One member taking part in a new expense.
+ * amountCents is only sent for an EXACT split; for EQUAL the backend calculates it.
+ */
+export type NewShare = {
+  memberId: number
+  amountCents?: number
+}
+
+/** What we send to create an expense (the backend's CreateExpenseRequest). */
+export type NewExpense = {
+  description: string
+  amountCents: number
+  paidByMemberId: number
+  splitType: SplitType
+  shares: NewShare[]
+}
+
+/** Creates an expense in a group (POST /api/groups/{groupId}/expenses) and returns it. */
+export async function createExpense(groupId: number, expense: NewExpense): Promise<Expense> {
+  const response = await fetch(`/api/groups/${groupId}/expenses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(expense),
+  })
+  await throwIfNotOk(response)
+  return response.json()
+}
