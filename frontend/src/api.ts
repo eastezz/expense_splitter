@@ -9,6 +9,7 @@ export type Group = {
 /** Asks the backend for all groups (GET /api/groups). */
 export async function listGroups(): Promise<Group[]> {
   const response = await fetch('/api/groups')
+  await throwIfNotOk(response)
   return response.json()
 }
 
