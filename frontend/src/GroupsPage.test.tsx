@@ -34,4 +34,18 @@ describe('GroupsPage', () => {
     expect(screen.queryByText('Loading groups…')).not.toBeInTheDocument()
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
+
+  it('shows the backend error when loading fails', async () => {
+    // The same kind of body Spring Boot sends for an error (a ProblemDetail).
+    mockFetch(
+      { title: 'Internal Server Error', status: 500, detail: 'Database is down' },
+      500,
+    )
+
+    render(<GroupsPage />)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Could not load groups: Database is down')
+    expect(screen.queryByText('No groups yet.')).not.toBeInTheDocument()
+  })
 })
