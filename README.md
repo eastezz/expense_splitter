@@ -2,48 +2,60 @@
 
 [![CI](https://github.com/eastezz/expense_splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/eastezz/expense_splitter/actions/workflows/ci.yml)
 
-A REST API for splitting group expenses, inspired by apps like Settle Up or Splitwise.
-You create a group, add members and record expenses that are split equally or by exact amounts.
-The API then shows each member's balance and suggests how to settle up with as few transfers as possible.
+A REST API for splitting group expenses, inspired by apps like Settle Up or Splitwise. Built with Java 21 and Spring Boot 4.
 
-## Tech stack
+## Example: settling a trip
 
-- Java 21, Spring Boot 4
-- Spring Web MVC, Spring Data JPA / Hibernate, Bean Validation
-- H2 in-memory database
-- springdoc-openapi (Swagger UI)
-- JUnit 5, MockMvc, AssertJ
-- GitHub Actions (CI)
-- React frontend: planned
+![Swagger UI of the running app with all endpoints](assets/swagger.png)
 
-## Run it locally
+Anna, Ben and Cem go on a trip. Anna pays 90 EUR for the hotel and Ben pays 30 EUR for pizza, both split equally by three. I entered this through the API, and it returned these balances (positive = gets money back, negative = owes money):
 
-You need a JDK 21 or newer. Maven is not needed, because the project ships the Maven wrapper.
+| Member | Paid | Share | Balance |
+|---|---:|---:|---:|
+| Anna | 90 | 40 | +50 |
+| Ben | 30 | 40 | -10 |
+| Cem | 0 | 40 | -40 |
 
-```bash
+The API suggests two transfers to settle up:
+
+- Cem pays Anna 40 EUR
+- Ben pays Anna 10 EUR
+
+After I recorded both transfers as payments, every balance was 0 and there were no transfers left to suggest.
+
+## How it works
+
+- Money is stored as whole cents in a `long`, never as floating point, so there are no rounding errors.
+- An equal split gives the leftover cents to the members with the smallest ids: 1000 cents split by three is 334 / 333 / 333. An exact split must add up to the total, otherwise the request is rejected.
+- A member's balance is what they paid minus their share, plus the payments they sent minus the payments they received. The balances of a group always add up to 0. They are calculated on every request and never stored, so they can't get out of sync.
+- Settle-up is greedy: the biggest debtor pays the biggest creditor until everyone is at 0. This needs at most n-1 transfers for n members. It is not always the absolute minimum, because finding that is NP-hard.
+- Errors are returned as ProblemDetail (RFC 9457) JSON.
+
+The key code is in [SplitCalculator.java](backend/src/main/java/io/github/eastezz/fairshare/expense/SplitCalculator.java), [BalanceCalculator.java](backend/src/main/java/io/github/eastezz/fairshare/settlement/BalanceCalculator.java) and [SettlementCalculator.java](backend/src/main/java/io/github/eastezz/fairshare/settlement/SettlementCalculator.java).
+
+## Quick start
+
+```powershell
 cd backend
-```
-
-Windows:
-
-```bash
 .\mvnw.cmd spring-boot:run
 ```
 
-macOS / Linux:
+Then open http://localhost:8080/swagger-ui.html to try every endpoint in the browser. On macOS or Linux, use `./mvnw` instead. You need JDK 21 or newer; Maven is not needed, because the project ships the Maven wrapper.
 
-```bash
-./mvnw spring-boot:run
+To create a group and a member from a second PowerShell window:
+
+```powershell
+$api = "http://localhost:8080/api"
+$group = Invoke-RestMethod -Method Post "$api/groups" -ContentType "application/json" -Body '{"name":"Trip"}'
+Invoke-RestMethod -Method Post "$api/groups/$($group.id)/members" -ContentType "application/json" -Body '{"name":"Anna"}'
 ```
 
-Then open http://localhost:8080/swagger-ui.html to try every endpoint in the browser.
-
-Run the tests with `.\mvnw.cmd verify` (Windows) or `./mvnw verify` (macOS / Linux).
+The data is kept in an in-memory H2 database, so it is gone after a restart.
 
 ## Endpoints
 
 | Method | Path | What it does |
-| ------ | ---- | ------------ |
+|---|---|---|
 | GET | `/api/health` | Health check |
 | POST | `/api/groups` | Create a group |
 | GET | `/api/groups` | List all groups |
@@ -59,36 +71,19 @@ Run the tests with `.\mvnw.cmd verify` (Windows) or `./mvnw verify` (macOS / Lin
 | POST | `/api/groups/{groupId}/payments` | Record a payment between two members |
 | GET | `/api/groups/{groupId}/payments` | List the payments of a group |
 
-## Example
+## Tests
 
-A trip with Anna, Ben and Cem:
+```powershell
+cd backend
+.\mvnw.cmd verify
+```
 
-- Anna pays 90 EUR for the hotel, split equally by three (30 each).
-- Ben pays 30 EUR for pizza, split equally by three (10 each).
-
-Balances (positive = gets money back, negative = owes money):
-
-| Member | Paid | Share | Balance |
-| ------ | ---: | ----: | ------: |
-| Anna | 90 | 40 | +50 |
-| Ben | 30 | 40 | -10 |
-| Cem | 0 | 40 | -40 |
-
-Suggested transfers:
-
-- Cem pays Anna 40 EUR
-- Ben pays Anna 10 EUR
-
-## Design notes
-
-- **Money in whole cents.** All amounts are stored as `long` cents, never as floating point, so there are no rounding errors.
-- **Leftover cents.** When an amount cannot be split evenly (10.00 EUR by three), the extra cents go to the members with the smallest ids, so the shares always add up to the total.
-- **Balances are calculated, not stored.** Every balance is computed from the expenses and payments of the group, so it can never get out of sync.
-- **Greedy settle-up.** The biggest debtor pays the biggest creditor, again and again. This needs at most n-1 transfers for n members. It is not always the absolute minimum, because finding that is NP-hard.
-- **Clear errors.** Errors are returned as ProblemDetail (RFC 9457) JSON responses.
+The 67 tests check the split rounding, the balances, the settle-up (including a property test over 500 random groups), every endpoint with MockMvc including the error cases, and an end-to-end test that pays all suggested transfers and ends with every balance at 0. GitHub Actions runs them on every push to `main` and on every pull request.
 
 ## Roadmap
 
-- React frontend
-- PostgreSQL with Flyway migrations and Docker Compose
-- Login
+- [x] REST API for groups, members, expenses, balances, settle-up and payments
+- [x] Tests and a GitHub Actions workflow that runs them
+- [ ] React frontend
+- [ ] PostgreSQL with Flyway and Docker Compose
+- [ ] Login
