@@ -61,3 +61,17 @@ export async function listMembers(groupId: number): Promise<Member[]> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/**
+ * Adds a member to a group (POST /api/groups/{groupId}/members) and returns it.
+ * If the name is already taken in this group, the backend answers 409 and we throw its message.
+ */
+export async function addMember(groupId: number, name: string): Promise<Member> {
+  const response = await fetch(`/api/groups/${groupId}/members`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  await throwIfNotOk(response)
+  return response.json()
+}
