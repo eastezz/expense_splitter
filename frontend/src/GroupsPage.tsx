@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listGroups, type Group } from './api'
+import { createGroup, listGroups, type Group } from './api'
 
 /** The start page: loads all groups from the backend and lists them. */
 function GroupsPage() {
@@ -27,6 +27,13 @@ function GroupsPage() {
     load()
   }, [])
 
+  // Sends the new group to the backend, then shows it in the list.
+  async function handleCreate() {
+    const created = await createGroup(name.trim())
+    setGroups([...groups, created])
+    setName('')
+  }
+
   return (
     <section>
       <h2>Groups</h2>
@@ -38,7 +45,12 @@ function GroupsPage() {
           <li key={group.id}>{group.name}</li>
         ))}
       </ul>
-      <form onSubmit={(event) => event.preventDefault()}>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          handleCreate()
+        }}
+      >
         <label htmlFor="group-name">New group name</label>
         <input
           id="group-name"
