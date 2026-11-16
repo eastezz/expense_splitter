@@ -9,6 +9,8 @@ function GroupsPage() {
   const [loading, setLoading] = useState(true)
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
+  // What the user has typed into the "New group name" box.
+  const [name, setName] = useState('')
 
   // Runs once, after the page first appears on screen.
   useEffect(() => {
@@ -36,6 +38,15 @@ function GroupsPage() {
           <li key={group.id}>{group.name}</li>
         ))}
       </ul>
+      <form onSubmit={(event) => event.preventDefault()}>
+        <label htmlFor="group-name">New group name</label>
+        <input
+          id="group-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <button type="submit">Create group</button>
+      </form>
     </section>
   )
 }
