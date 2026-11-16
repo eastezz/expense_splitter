@@ -144,3 +144,13 @@ export async function deleteExpense(groupId: number, expenseId: number): Promise
   })
   await throwIfNotOk(response)
 }
+
+/**
+ * Asks the backend for one group (GET /api/groups/{groupId}).
+ * An unknown id gives 404, which throwIfNotOk turns into an Error with the backend's message.
+ */
+export async function getGroup(groupId: number): Promise<Group> {
+  const response = await fetch(`/api/groups/${groupId}`)
+  await throwIfNotOk(response)
+  return response.json()
+}
