@@ -47,3 +47,17 @@ export async function createGroup(name: string): Promise<Group> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/** A member of a group as the backend returns it. */
+export type Member = {
+  id: number
+  name: string
+  groupId: number
+}
+
+/** Asks the backend for all members of one group (GET /api/groups/{groupId}/members). */
+export async function listMembers(groupId: number): Promise<Member[]> {
+  const response = await fetch(`/api/groups/${groupId}/members`)
+  await throwIfNotOk(response)
+  return response.json()
+}
