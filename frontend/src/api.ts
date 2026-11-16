@@ -36,3 +36,14 @@ export async function throwIfNotOk(response: Response): Promise<void> {
   }
   throw new Error(message)
 }
+
+/** Creates a new group (POST /api/groups) and returns it as the backend saved it. */
+export async function createGroup(name: string): Promise<Group> {
+  const response = await fetch('/api/groups', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  await throwIfNotOk(response)
+  return response.json()
+}
