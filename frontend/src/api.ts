@@ -75,3 +75,32 @@ export async function addMember(groupId: number, name: string): Promise<Member> 
   await throwIfNotOk(response)
   return response.json()
 }
+
+/** How an expense is divided: EQUAL = same share for everyone, EXACT = each amount typed by hand. */
+export type SplitType = 'EQUAL' | 'EXACT'
+
+/** One member's part of an expense, as the backend returns it. */
+export type Share = {
+  memberId: number
+  memberName: string
+  shareCents: number
+}
+
+/** An expense as the backend returns it. All money is in whole cents (1234 = 12,34 €). */
+export type Expense = {
+  id: number
+  groupId: number
+  description: string
+  amountCents: number
+  paidByMemberId: number
+  splitType: SplitType
+  createdAt: string
+  shares: Share[]
+}
+
+/** Asks the backend for all expenses of one group (GET /api/groups/{groupId}/expenses). */
+export async function listExpenses(groupId: number): Promise<Expense[]> {
+  const response = await fetch(`/api/groups/${groupId}/expenses`)
+  await throwIfNotOk(response)
+  return response.json()
+}
