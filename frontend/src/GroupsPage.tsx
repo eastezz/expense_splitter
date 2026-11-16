@@ -11,6 +11,8 @@ function GroupsPage() {
   const [error, setError] = useState<string | null>(null)
   // What the user has typed into the "New group name" box.
   const [name, setName] = useState('')
+  // The error from the last "Create group" attempt, or null.
+  const [createError, setCreateError] = useState<string | null>(null)
 
   // Runs once, after the page first appears on screen.
   useEffect(() => {
@@ -29,9 +31,14 @@ function GroupsPage() {
 
   // Sends the new group to the backend, then shows it in the list.
   async function handleCreate() {
-    const created = await createGroup(name.trim())
-    setGroups([...groups, created])
-    setName('')
+    setCreateError(null)
+    try {
+      const created = await createGroup(name.trim())
+      setGroups([...groups, created])
+      setName('')
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Unknown error')
+    }
   }
 
   return (
@@ -61,6 +68,7 @@ function GroupsPage() {
           Create group
         </button>
       </form>
+      {createError && <p role="alert">Could not create group: {createError}</p>}
     </section>
   )
 }
