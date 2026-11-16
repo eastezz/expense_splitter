@@ -133,3 +133,14 @@ export async function createExpense(groupId: number, expense: NewExpense): Promi
   await throwIfNotOk(response)
   return response.json()
 }
+
+/**
+ * Deletes one expense (DELETE /api/groups/{groupId}/expenses/{expenseId}).
+ * The backend answers 204 No Content, so there is no body to read and we return nothing.
+ */
+export async function deleteExpense(groupId: number, expenseId: number): Promise<void> {
+  const response = await fetch(`/api/groups/${groupId}/expenses/${expenseId}`, {
+    method: 'DELETE',
+  })
+  await throwIfNotOk(response)
+}
