@@ -5,12 +5,15 @@ import { listGroups, type Group } from './api'
 function GroupsPage() {
   // The groups we have loaded so far. Starts as an empty list.
   const [groups, setGroups] = useState<Group[]>([])
+  // True until the first answer from the backend arrives.
+  const [loading, setLoading] = useState(true)
 
   // Runs once, after the page first appears on screen.
   useEffect(() => {
     async function load() {
       const loaded = await listGroups()
       setGroups(loaded)
+      setLoading(false)
     }
     load()
   }, [])
@@ -18,6 +21,7 @@ function GroupsPage() {
   return (
     <section>
       <h2>Groups</h2>
+      {loading && <p>Loading groups…</p>}
       <ul>
         {groups.map((group) => (
           <li key={group.id}>{group.name}</li>
