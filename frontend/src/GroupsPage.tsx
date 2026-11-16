@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createGroup, listGroups, type Group } from './api'
+import './GroupsPage.css'
 
 /** The start page: loads all groups from the backend and lists them. */
 function GroupsPage() {
@@ -45,14 +46,15 @@ function GroupsPage() {
     <section>
       <h2>Groups</h2>
       {loading && <p>Loading groups…</p>}
-      {error && <p role="alert">Could not load groups: {error}</p>}
+      {error && <p role="alert" className="error">Could not load groups: {error}</p>}
       {!loading && !error && groups.length === 0 && <p>No groups yet.</p>}
-      <ul>
+      <ul className="group-list">
         {groups.map((group) => (
           <li key={group.id}>{group.name}</li>
         ))}
       </ul>
       <form
+        className="group-form"
         onSubmit={(event) => {
           event.preventDefault()
           handleCreate()
@@ -68,7 +70,7 @@ function GroupsPage() {
           Create group
         </button>
       </form>
-      {createError && <p role="alert">Could not create group: {createError}</p>}
+      {createError && <p role="alert" className="error">Could not create group: {createError}</p>}
     </section>
   )
 }
