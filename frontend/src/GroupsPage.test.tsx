@@ -23,4 +23,15 @@ describe('GroupsPage', () => {
     expect(screen.getByText('Flat share')).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
   })
+
+  it('shows a message when there are no groups', async () => {
+    mockFetch([])
+
+    render(<GroupsPage />)
+
+    expect(await screen.findByText('No groups yet.')).toBeInTheDocument()
+    // queryBy... returns null instead of failing, so we can check something is NOT there.
+    expect(screen.queryByText('Loading groups…')).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+  })
 })
