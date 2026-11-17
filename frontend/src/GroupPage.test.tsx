@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import GroupPage from './GroupPage'
@@ -71,5 +72,29 @@ describe('GroupPage', () => {
     // \u00a0 is the non-breaking space Intl puts before the € sign.
     expect(listRows()).toEqual(['Anna', 'Ben', 'Dinner 90,00\u00a0€ paid by Anna Delete'])
     expect(screen.getByRole('link', { name: '← All groups' })).toHaveAttribute('href', '/')
+  })
+
+  it('adds a member and shows it in the list', async () => {
+    // The backend answers the POST with the saved member.
+    const fetchMock = mockBackend(() =>
+      Response.json({ id: 12, name: 'Cem', groupId: 1 }, { status: 201 }),
+    )
+    const user = userEvent.setup()
+
+    renderGroupPage()
+    await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
+
+    const input = screen.getByLabelText('New member name')
+    await user.type(input, 'Cem')
+    await user.click(screen.getByRole('button', { name: 'Add member' }))
+
+    // waitFor repeats the check until it passes (or times out), because saving is asynchronous.
+    await waitFor(() => expect(listRows()).toContain('Cem'))
+    expect(input).toHaveValue('')
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/groups/1/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Cem' }),
+    })
   })
 })
