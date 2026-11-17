@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import {
   addMember,
+  createExpense,
   getGroup,
   listExpenses,
   listMembers,
@@ -9,7 +10,7 @@ import {
   type Group,
   type Member,
 } from './api'
-import { formatCents } from './money'
+import { formatCents, parseEuroToCents } from './money'
 
 /** Turns the id from the URL into a number, or null if it is not a positive whole number. */
 function parseGroupId(text: string | undefined): number | null {
@@ -35,6 +36,11 @@ function GroupPage() {
   const [memberName, setMemberName] = useState('')
   // The error from the last "Add member" attempt, or null.
   const [memberError, setMemberError] = useState<string | null>(null)
+  // The fields of the "New expense" form, as typed by the user.
+  const [description, setDescription] = useState('')
+  const [amountText, setAmountText] = useState('')
+  // The id of the member who paid, as text from the <select>. '' means nobody chosen yet.
+  const [payerId, setPayerId] = useState('')
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -72,6 +78,31 @@ function GroupPage() {
     } catch (err) {
       setMemberError(err instanceof Error ? err.message : 'Unknown error')
     }
+  }
+
+  // The amount in cents, or null while the amount box holds no valid amount.
+  const amountCents = parseEuroToCents(amountText)
+  // The form may only be sent when every field holds something useful.
+  const canAddExpense =
+    description.trim() !== '' && amountCents !== null && amountCents > 0 && payerId !== ''
+
+  // Sends the new expense to the backend, then shows it in the list and empties the form.
+  // For now the cost is split equally among all members.
+  async function handleAddExpense() {
+    if (group === null || amountCents === null) {
+      return
+    }
+    const created = await createExpense(group.id, {
+      description: description.trim(),
+      amountCents,
+      paidByMemberId: Number(payerId),
+      splitType: 'EQUAL',
+      shares: members.map((member) => ({ memberId: member.id })),
+    })
+    setExpenses([...expenses, created])
+    setDescription('')
+    setAmountText('')
+    setPayerId('')
   }
 
   // Finds a member's name by id, e.g. to show who paid an expense.
@@ -127,6 +158,52 @@ function GroupPage() {
               </li>
             ))}
           </ul>
+          <h3>New expense</h3>
+          {members.length === 0 ? (
+            <p>Add members before adding expenses.</p>
+          ) : (
+            <form
+              className="expense-form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                handleAddExpense()
+              }}
+            >
+              <label htmlFor="expense-description">Description</label>
+              <input
+                id="expense-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+              <label htmlFor="expense-amount">Amount (€)</label>
+              {/* type="text" with inputMode="decimal": phones show a number keyboard,
+                  but the user may still type a comma, like "12,34". */}
+              <input
+                id="expense-amount"
+                type="text"
+                inputMode="decimal"
+                placeholder="12,34"
+                value={amountText}
+                onChange={(event) => setAmountText(event.target.value)}
+              />
+              <label htmlFor="expense-payer">Paid by</label>
+              <select
+                id="expense-payer"
+                value={payerId}
+                onChange={(event) => setPayerId(event.target.value)}
+              >
+                <option value="">Choose who paid</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" disabled={!canAddExpense}>
+                Add expense
+              </button>
+            </form>
+          )}
         </>
       )}
     </section>
