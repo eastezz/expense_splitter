@@ -66,6 +66,8 @@ function BalancesPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([])
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
+  // The error from the last "Mark as paid" click, or null.
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -95,14 +97,19 @@ function BalancesPage() {
     if (group === null) {
       return
     }
-    await createPayment(group.id, {
-      fromMemberId: transfer.fromMemberId,
-      toMemberId: transfer.toMemberId,
-      amountCents: transfer.amountCents,
-    })
-    const [newBalances, newTransfers] = await loadSettlement(group.id)
-    setBalances(newBalances)
-    setTransfers(newTransfers)
+    setPaymentError(null)
+    try {
+      await createPayment(group.id, {
+        fromMemberId: transfer.fromMemberId,
+        toMemberId: transfer.toMemberId,
+        amountCents: transfer.amountCents,
+      })
+      const [newBalances, newTransfers] = await loadSettlement(group.id)
+      setBalances(newBalances)
+      setTransfers(newTransfers)
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : 'Unknown error')
+    }
   }
 
   return (
@@ -145,6 +152,11 @@ function BalancesPage() {
               </li>
             ))}
           </ul>
+          {paymentError && (
+            <p role="alert" className="error">
+              Could not record payment: {paymentError}
+            </p>
+          )}
         </>
       )}
     </section>
