@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { addMember, getGroup, listMembers, type Group, type Member } from './api'
+import {
+  addMember,
+  getGroup,
+  listExpenses,
+  listMembers,
+  type Expense,
+  type Group,
+  type Member,
+} from './api'
+import { formatCents } from './money'
 
 /** Turns the id from the URL into a number, or null if it is not a positive whole number. */
 function parseGroupId(text: string | undefined): number | null {
@@ -18,6 +27,8 @@ function GroupPage() {
   const [group, setGroup] = useState<Group | null>(null)
   // The members of the group. Starts as an empty list.
   const [members, setMembers] = useState<Member[]>([])
+  // The expenses of the group. Starts as an empty list.
+  const [expenses, setExpenses] = useState<Expense[]>([])
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
   // What the user has typed into the "New member name" box.
@@ -32,13 +43,15 @@ function GroupPage() {
     }
     async function load(groupIdToLoad: number) {
       try {
-        // Promise.all starts both requests at the same time and waits until both have answered.
-        const [loadedGroup, loadedMembers] = await Promise.all([
+        // Promise.all starts all requests at the same time and waits until all have answered.
+        const [loadedGroup, loadedMembers, loadedExpenses] = await Promise.all([
           getGroup(groupIdToLoad),
           listMembers(groupIdToLoad),
+          listExpenses(groupIdToLoad),
         ])
         setGroup(loadedGroup)
         setMembers(loadedMembers)
+        setExpenses(loadedExpenses)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error')
       }
@@ -59,6 +72,12 @@ function GroupPage() {
     } catch (err) {
       setMemberError(err instanceof Error ? err.message : 'Unknown error')
     }
+  }
+
+  // Finds a member's name by id, e.g. to show who paid an expense.
+  function nameOf(memberId: number): string {
+    const member = members.find((m) => m.id === memberId)
+    return member ? member.name : 'Unknown member'
   }
 
   return (
@@ -97,6 +116,17 @@ function GroupPage() {
             </button>
           </form>
           {memberError && <p role="alert" className="error">Could not add member: {memberError}</p>}
+          <h3>Expenses</h3>
+          {expenses.length === 0 && <p>No expenses yet.</p>}
+          <ul className="expense-list">
+            {expenses.map((expense) => (
+              <li key={expense.id}>
+                <span className="expense-description">{expense.description}</span>{' '}
+                <span className="expense-amount">{formatCents(expense.amountCents)}</span>{' '}
+                <span className="expense-payer">paid by {nameOf(expense.paidByMemberId)}</span>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </section>
