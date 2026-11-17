@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { getGroup, listBalances, type Balance, type Group } from './api'
+import {
+  getGroup,
+  listBalances,
+  listSettlements,
+  type Balance,
+  type Group,
+  type Transfer,
+} from './api'
 import { parseGroupId } from './groupId'
 import { formatCents } from './money'
 import './BalancesPage.css'
@@ -46,6 +53,8 @@ function BalancesPage() {
   const [group, setGroup] = useState<Group | null>(null)
   // Every member's balance. Starts as an empty list.
   const [balances, setBalances] = useState<Balance[]>([])
+  // The suggested transfers: who should pay whom so that everyone ends at 0.
+  const [transfers, setTransfers] = useState<Transfer[]>([])
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
 
@@ -56,13 +65,15 @@ function BalancesPage() {
     }
     async function load(groupIdToLoad: number) {
       try {
-        // Promise.all starts both requests at the same time and waits until both have answered.
-        const [loadedGroup, loadedBalances] = await Promise.all([
+        // Promise.all starts all requests at the same time and waits until all have answered.
+        const [loadedGroup, loadedBalances, loadedTransfers] = await Promise.all([
           getGroup(groupIdToLoad),
           listBalances(groupIdToLoad),
+          listSettlements(groupIdToLoad),
         ])
         setGroup(loadedGroup)
         setBalances(loadedBalances)
+        setTransfers(loadedTransfers)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error')
       }
@@ -88,6 +99,18 @@ function BalancesPage() {
                 <span className="balance-name">{balance.memberName}</span>{' '}
                 <span className="balance-wording">{balanceWording(balance.balanceCents)}</span>{' '}
                 <span className="balance-amount">{formatSignedCents(balance.balanceCents)}</span>
+              </li>
+            ))}
+          </ul>
+          <h3>Settle up</h3>
+          <ul className="transfer-list">
+            {transfers.map((transfer) => (
+              // A pair of members appears at most once, so their two ids make a unique key.
+              <li key={`${transfer.fromMemberId}-${transfer.toMemberId}`}>
+                <span className="transfer-text">
+                  {transfer.fromMemberName} pays {transfer.toMemberName}
+                </span>{' '}
+                <span className="transfer-amount">{formatCents(transfer.amountCents)}</span>
               </li>
             ))}
           </ul>
