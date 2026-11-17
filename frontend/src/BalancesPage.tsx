@@ -30,6 +30,14 @@ function balanceWording(cents: number): string {
   return 'is settled up'
 }
 
+/**
+ * Loads the balances and the suggested transfers of a group at the same time.
+ * Used when the page appears and again after a payment, because a payment changes both.
+ */
+function loadSettlement(groupId: number): Promise<[Balance[], Transfer[]]> {
+  return Promise.all([listBalances(groupId), listSettlements(groupId)])
+}
+
 /** The CSS class that colors a balance: green when positive, red when negative. */
 function balanceClass(cents: number): string {
   if (cents > 0) {
@@ -66,11 +74,10 @@ function BalancesPage() {
     }
     async function load(groupIdToLoad: number) {
       try {
-        // Promise.all starts all requests at the same time and waits until all have answered.
-        const [loadedGroup, loadedBalances, loadedTransfers] = await Promise.all([
+        // Promise.all starts both requests at the same time and waits until both have answered.
+        const [loadedGroup, [loadedBalances, loadedTransfers]] = await Promise.all([
           getGroup(groupIdToLoad),
-          listBalances(groupIdToLoad),
-          listSettlements(groupIdToLoad),
+          loadSettlement(groupIdToLoad),
         ])
         setGroup(loadedGroup)
         setBalances(loadedBalances)
@@ -83,6 +90,7 @@ function BalancesPage() {
   }, [id])
 
   // Records that one suggested transfer has been paid, by saving it as a payment.
+  // Then asks the backend again, because the payment changes the balances and transfers.
   async function handleMarkPaid(transfer: Transfer) {
     if (group === null) {
       return
@@ -92,6 +100,9 @@ function BalancesPage() {
       toMemberId: transfer.toMemberId,
       amountCents: transfer.amountCents,
     })
+    const [newBalances, newTransfers] = await loadSettlement(group.id)
+    setBalances(newBalances)
+    setTransfers(newTransfers)
   }
 
   return (
