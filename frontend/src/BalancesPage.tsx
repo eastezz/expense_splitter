@@ -103,6 +103,10 @@ function BalancesPage() {
             ))}
           </ul>
           <h3>Settle up</h3>
+          {/* No transfers left means every balance is 0. Without members there is nothing to settle. */}
+          {transfers.length === 0 && balances.length > 0 && (
+            <p className="settled">Everyone is settled up. 🎉</p>
+          )}
           <ul className="transfer-list">
             {transfers.map((transfer) => (
               // A pair of members appears at most once, so their two ids make a unique key.
