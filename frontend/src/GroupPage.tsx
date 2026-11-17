@@ -49,6 +49,8 @@ function GroupPage() {
   const [splitType, setSplitType] = useState<SplitType>('EQUAL')
   // For EXACT: the amount typed per member, as text, looked up by member id.
   const [exactAmounts, setExactAmounts] = useState<Record<number, string>>({})
+  // The error from the last "Add expense" attempt, or null.
+  const [expenseError, setExpenseError] = useState<string | null>(null)
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -125,30 +127,36 @@ function GroupPage() {
 
   // Sends the new expense to the backend, then shows it in the list and empties the form.
   // Only the ticked members share the cost.
+  // On an error the form keeps what the user typed, so they can fix it and try again.
   async function handleAddExpense() {
     if (group === null || amountCents === null) {
       return
     }
-    const created = await createExpense(group.id, {
-      description: description.trim(),
-      amountCents,
-      paidByMemberId: Number(payerId),
-      splitType,
-      // EQUAL: only the member ids (the backend calculates the amounts).
-      // EXACT: each member id together with the amount the user typed.
-      shares: participants.map((member) =>
-        splitType === 'EQUAL'
-          ? { memberId: member.id }
-          : { memberId: member.id, amountCents: exactCentsOf(member.id) ?? 0 },
-      ),
-    })
-    setExpenses([...expenses, created])
-    setDescription('')
-    setAmountText('')
-    setPayerId('')
-    setExcludedIds([])
-    setSplitType('EQUAL')
-    setExactAmounts({})
+    setExpenseError(null)
+    try {
+      const created = await createExpense(group.id, {
+        description: description.trim(),
+        amountCents,
+        paidByMemberId: Number(payerId),
+        splitType,
+        // EQUAL: only the member ids (the backend calculates the amounts).
+        // EXACT: each member id together with the amount the user typed.
+        shares: participants.map((member) =>
+          splitType === 'EQUAL'
+            ? { memberId: member.id }
+            : { memberId: member.id, amountCents: exactCentsOf(member.id) ?? 0 },
+        ),
+      })
+      setExpenses([...expenses, created])
+      setDescription('')
+      setAmountText('')
+      setPayerId('')
+      setExcludedIds([])
+      setSplitType('EQUAL')
+      setExactAmounts({})
+    } catch (err) {
+      setExpenseError(err instanceof Error ? err.message : 'Unknown error')
+    }
   }
 
   // Finds a member's name by id, e.g. to show who paid an expense.
@@ -307,6 +315,11 @@ function GroupPage() {
                 Add expense
               </button>
             </form>
+          )}
+          {expenseError && (
+            <p role="alert" className="error">
+              Could not add expense: {expenseError}
+            </p>
           )}
         </>
       )}
