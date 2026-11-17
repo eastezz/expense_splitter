@@ -87,7 +87,9 @@ function GroupPage() {
     setMemberError(null)
     try {
       const created = await addMember(group.id, memberName.trim())
-      setMembers([...members, created])
+      // Pass a function instead of a new list: React gives it the newest list. If the user
+      // adds two members quickly, `members` here could still be the list from before the first.
+      setMembers((current) => [...current, created])
       setMemberName('')
     } catch (err) {
       setMemberError(err instanceof Error ? err.message : 'Unknown error')
@@ -151,7 +153,8 @@ function GroupPage() {
             : { memberId: member.id, amountCents: exactCentsOf(member.id) ?? 0 },
         ),
       })
-      setExpenses([...expenses, created])
+      // A function again, so a quick second expense or delete can't overwrite this one.
+      setExpenses((current) => [...current, created])
       setDescription('')
       setAmountText('')
       setPayerId('')
@@ -171,7 +174,7 @@ function GroupPage() {
     setDeleteError(null)
     try {
       await deleteExpense(group.id, expenseId)
-      setExpenses(expenses.filter((expense) => expense.id !== expenseId))
+      setExpenses((current) => current.filter((expense) => expense.id !== expenseId))
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Unknown error')
     }
