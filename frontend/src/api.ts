@@ -172,3 +172,22 @@ export async function listBalances(groupId: number): Promise<Balance[]> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/**
+ * One suggested transfer as the backend returns it: who should pay whom, in whole cents.
+ * If everyone made all suggested transfers, every balance would be 0.
+ */
+export type Transfer = {
+  fromMemberId: number
+  fromMemberName: string
+  toMemberId: number
+  toMemberName: string
+  amountCents: number
+}
+
+/** Asks the backend who should pay whom to settle the group (GET /api/groups/{groupId}/settlements). */
+export async function listSettlements(groupId: number): Promise<Transfer[]> {
+  const response = await fetch(`/api/groups/${groupId}/settlements`)
+  await throwIfNotOk(response)
+  return response.json()
+}
