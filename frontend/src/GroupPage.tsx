@@ -9,6 +9,7 @@ import {
   type Expense,
   type Group,
   type Member,
+  type SplitType,
 } from './api'
 import { formatCents, parseEuroToCents } from './money'
 
@@ -44,6 +45,10 @@ function GroupPage() {
   // The ids of members whose box is NOT ticked. Everyone else shares the expense.
   // We store the unticked ones, so a newly added member is ticked automatically.
   const [excludedIds, setExcludedIds] = useState<number[]>([])
+  // EQUAL = the backend divides the amount; EXACT = the user types each member's amount.
+  const [splitType, setSplitType] = useState<SplitType>('EQUAL')
+  // For EXACT: the amount typed per member, as text, looked up by member id.
+  const [exactAmounts, setExactAmounts] = useState<Record<number, string>>({})
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -87,13 +92,27 @@ function GroupPage() {
   const amountCents = parseEuroToCents(amountText)
   // The members whose box is ticked: they share the expense.
   const participants = members.filter((member) => !excludedIds.includes(member.id))
+
+  // The amount typed for one member in an EXACT split, in cents, or null if it is not valid.
+  function exactCentsOf(memberId: number): number | null {
+    return parseEuroToCents(exactAmounts[memberId] ?? '')
+  }
+  // For EXACT: every ticked member needs a valid amount, and together they must match the total.
+  const allExactValid = participants.every((member) => exactCentsOf(member.id) !== null)
+  const assignedCents = participants.reduce(
+    (sum, member) => sum + (exactCentsOf(member.id) ?? 0),
+    0,
+  )
+  const remainingCents = (amountCents ?? 0) - assignedCents
+
   // The form may only be sent when every field holds something useful.
   const canAddExpense =
     description.trim() !== '' &&
     amountCents !== null &&
     amountCents > 0 &&
     payerId !== '' &&
-    participants.length > 0
+    participants.length > 0 &&
+    (splitType === 'EQUAL' || (allExactValid && remainingCents === 0))
 
   // Ticks or unticks one member's "shared by" box.
   function toggleParticipant(memberId: number) {
@@ -105,7 +124,7 @@ function GroupPage() {
   }
 
   // Sends the new expense to the backend, then shows it in the list and empties the form.
-  // The cost is split equally among the ticked members.
+  // Only the ticked members share the cost.
   async function handleAddExpense() {
     if (group === null || amountCents === null) {
       return
@@ -114,14 +133,22 @@ function GroupPage() {
       description: description.trim(),
       amountCents,
       paidByMemberId: Number(payerId),
-      splitType: 'EQUAL',
-      shares: participants.map((member) => ({ memberId: member.id })),
+      splitType,
+      // EQUAL: only the member ids (the backend calculates the amounts).
+      // EXACT: each member id together with the amount the user typed.
+      shares: participants.map((member) =>
+        splitType === 'EQUAL'
+          ? { memberId: member.id }
+          : { memberId: member.id, amountCents: exactCentsOf(member.id) ?? 0 },
+      ),
     })
     setExpenses([...expenses, created])
     setDescription('')
     setAmountText('')
     setPayerId('')
     setExcludedIds([])
+    setSplitType('EQUAL')
+    setExactAmounts({})
   }
 
   // Finds a member's name by id, e.g. to show who paid an expense.
@@ -219,18 +246,62 @@ function GroupPage() {
                 ))}
               </select>
               {/* A fieldset groups related inputs; its legend is read out as their common title. */}
+              <fieldset className="expense-split">
+                <legend>Split</legend>
+                {/* Radio buttons with the same name: only one of them can be chosen. */}
+                <label>
+                  <input
+                    type="radio"
+                    name="split-type"
+                    checked={splitType === 'EQUAL'}
+                    onChange={() => setSplitType('EQUAL')}
+                  />{' '}
+                  Equal
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="split-type"
+                    checked={splitType === 'EXACT'}
+                    onChange={() => setSplitType('EXACT')}
+                  />{' '}
+                  Exact amounts
+                </label>
+              </fieldset>
+              {/* A fieldset groups related inputs; its legend is read out as their common title. */}
               <fieldset className="expense-shares">
                 <legend>Shared by</legend>
-                {members.map((member) => (
-                  <label key={member.id}>
-                    <input
-                      type="checkbox"
-                      checked={!excludedIds.includes(member.id)}
-                      onChange={() => toggleParticipant(member.id)}
-                    />{' '}
-                    {member.name}
-                  </label>
-                ))}
+                {members.map((member) => {
+                  const ticked = !excludedIds.includes(member.id)
+                  return (
+                    <div key={member.id} className="share-row">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={ticked}
+                          onChange={() => toggleParticipant(member.id)}
+                        />{' '}
+                        {member.name}
+                      </label>
+                      {splitType === 'EXACT' && ticked && (
+                        <input
+                          aria-label={`Amount for ${member.name}`}
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={exactAmounts[member.id] ?? ''}
+                          onChange={(event) =>
+                            // Copy the old object and change only this member's entry.
+                            setExactAmounts({ ...exactAmounts, [member.id]: event.target.value })
+                          }
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+                {splitType === 'EXACT' && (
+                  <p className="remaining">Still to assign: {formatCents(remainingCents)}</p>
+                )}
               </fieldset>
               <button type="submit" disabled={!canAddExpense}>
                 Add expense
