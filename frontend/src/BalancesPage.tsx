@@ -4,9 +4,11 @@ import {
   createPayment,
   getGroup,
   listBalances,
+  listPayments,
   listSettlements,
   type Balance,
   type Group,
+  type Payment,
   type Transfer,
 } from './api'
 import { parseGroupId } from './groupId'
@@ -31,11 +33,16 @@ function balanceWording(cents: number): string {
 }
 
 /**
- * Loads the balances and the suggested transfers of a group at the same time.
- * Used when the page appears and again after a payment, because a payment changes both.
+ * Loads the balances, the suggested transfers and the payments of a group at the same time.
+ * Used when the page appears and again after a payment, because a payment changes all three.
  */
-function loadSettlement(groupId: number): Promise<[Balance[], Transfer[]]> {
-  return Promise.all([listBalances(groupId), listSettlements(groupId)])
+function loadSettlement(groupId: number): Promise<[Balance[], Transfer[], Payment[]]> {
+  return Promise.all([listBalances(groupId), listSettlements(groupId), listPayments(groupId)])
+}
+
+/** Shows the day of a payment the German way: "2026-11-17T15:00:00Z" -> "17.11.2026". */
+function formatDate(isoText: string): string {
+  return new Date(isoText).toLocaleDateString('de-DE')
 }
 
 /** The CSS class that colors a balance: green when positive, red when negative. */
@@ -64,6 +71,8 @@ function BalancesPage() {
   const [balances, setBalances] = useState<Balance[]>([])
   // The suggested transfers: who should pay whom so that everyone ends at 0.
   const [transfers, setTransfers] = useState<Transfer[]>([])
+  // The payments recorded so far, oldest first.
+  const [payments, setPayments] = useState<Payment[]>([])
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
   // The error from the last "Mark as paid" click, or null.
@@ -77,13 +86,14 @@ function BalancesPage() {
     async function load(groupIdToLoad: number) {
       try {
         // Promise.all starts both requests at the same time and waits until both have answered.
-        const [loadedGroup, [loadedBalances, loadedTransfers]] = await Promise.all([
+        const [loadedGroup, [loadedBalances, loadedTransfers, loadedPayments]] = await Promise.all([
           getGroup(groupIdToLoad),
           loadSettlement(groupIdToLoad),
         ])
         setGroup(loadedGroup)
         setBalances(loadedBalances)
         setTransfers(loadedTransfers)
+        setPayments(loadedPayments)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error')
       }
@@ -104,9 +114,10 @@ function BalancesPage() {
         toMemberId: transfer.toMemberId,
         amountCents: transfer.amountCents,
       })
-      const [newBalances, newTransfers] = await loadSettlement(group.id)
+      const [newBalances, newTransfers, newPayments] = await loadSettlement(group.id)
       setBalances(newBalances)
       setTransfers(newTransfers)
+      setPayments(newPayments)
     } catch (err) {
       setPaymentError(err instanceof Error ? err.message : 'Unknown error')
     }
@@ -157,6 +168,19 @@ function BalancesPage() {
               Could not record payment: {paymentError}
             </p>
           )}
+          <h3>Recorded payments</h3>
+          {payments.length === 0 && <p>No payments yet.</p>}
+          <ul className="payment-list">
+            {payments.map((payment) => (
+              <li key={payment.id}>
+                <span className="payment-text">
+                  {payment.fromMemberName} paid {payment.toMemberName}
+                </span>{' '}
+                <span className="payment-amount">{formatCents(payment.amountCents)}</span>{' '}
+                <span className="payment-date">{formatDate(payment.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </section>
