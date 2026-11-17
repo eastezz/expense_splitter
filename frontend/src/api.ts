@@ -224,3 +224,10 @@ export async function createPayment(groupId: number, payment: NewPayment): Promi
   await throwIfNotOk(response)
   return response.json()
 }
+
+/** Asks the backend for all recorded payments of one group (GET /api/groups/{groupId}/payments). */
+export async function listPayments(groupId: number): Promise<Payment[]> {
+  const response = await fetch(`/api/groups/${groupId}/payments`)
+  await throwIfNotOk(response)
+  return response.json()
+}
