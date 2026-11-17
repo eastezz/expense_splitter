@@ -1,4 +1,62 @@
-/* Styles for the balances page. */
+/* Styles for the balances page: balances, suggested transfers and recorded payments. */
+
+/* All three lists are boxes with one row per entry, the same look as the other pages. */
+.balance-list,
+.transfer-list,
+.payment-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+/* Each row: text on the left, the amount (and the button) pushed to the right. */
+.balance-list li,
+.transfer-list li,
+.payment-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.balance-list li:last-child,
+.transfer-list li:last-child,
+.payment-list li:last-child {
+  border-bottom: none;
+}
+
+/* An empty list would show as an empty box, so hide it. */
+.balance-list:empty,
+.transfer-list:empty,
+.payment-list:empty {
+  display: none;
+}
+
+.balance-name,
+.transfer-text,
+.payment-text {
+  font-weight: 600;
+}
+
+.balance-wording,
+.payment-date {
+  color: #59636e;
+}
+
+/* margin-left: auto takes all free space on its left, so the amount moves to the right edge.
+   tabular-nums gives every digit the same width, so amounts line up. */
+.balance-amount,
+.transfer-amount,
+.payment-amount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
 
 /* Green: the group owes this member money. Red: this member owes money. */
 .balance-positive .balance-amount {
@@ -12,4 +70,30 @@
 /* Exactly 0: grey, because there is nothing to do. */
 .balance-zero .balance-amount {
   color: #59636e;
+}
+
+/* A small blue button, the same blue as the main buttons on the group page. */
+.pay-button {
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #ffffff;
+  background-color: #1f6feb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pay-button:hover {
+  background-color: #1858c4;
+}
+
+/* The "everyone is settled up" message is a light green box. */
+.settled {
+  padding: 0.75rem 1rem;
+  color: #1a7f37;
+  font-weight: 600;
+  background-color: #dafbe1;
+  border: 1px solid #aceebb;
+  border-radius: 8px;
 }
