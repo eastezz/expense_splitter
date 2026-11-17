@@ -183,4 +183,22 @@ describe('BalancesPage', () => {
       'Cem paid Anna 40,00 € 17.11.2026',
     ])
   })
+
+  it('shows the error when recording a payment fails', async () => {
+    mockBackend(unsettledData(), () =>
+      Response.json({ title: 'Bad Request', detail: 'Amount is too large' }, { status: 400 }),
+    )
+    const user = userEvent.setup()
+    renderBalancesPage()
+    await screen.findByRole('heading', { level: 2, name: 'Balances in Weekend trip' })
+
+    await user.click(screen.getAllByRole('button', { name: 'Mark as paid' })[0])
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not record payment: Amount is too large',
+    )
+    // Nothing was paid, so both transfers are still there.
+    expect(screen.getAllByRole('button', { name: 'Mark as paid' })).toHaveLength(2)
+    expect(screen.getByText('No payments yet.')).toBeInTheDocument()
+  })
 })
