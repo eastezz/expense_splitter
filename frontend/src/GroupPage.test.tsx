@@ -141,4 +141,54 @@ describe('GroupPage', () => {
     // After success the form is empty again.
     expect(screen.getByLabelText('Description')).toHaveValue('')
   })
+
+  it('adds an exact split expense with an amount per member', async () => {
+    const tickets = {
+      id: 102,
+      groupId: 1,
+      description: 'Tickets',
+      amountCents: 3000,
+      paidByMemberId: 10,
+      splitType: 'EXACT',
+      createdAt: '2026-11-02T09:00:00Z',
+      shares: [
+        { memberId: 10, memberName: 'Anna', shareCents: 1000 },
+        { memberId: 11, memberName: 'Ben', shareCents: 2000 },
+      ],
+    }
+    const fetchMock = mockBackend(() => Response.json(tickets, { status: 201 }))
+    const user = userEvent.setup()
+
+    renderGroupPage()
+    await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
+
+    await user.type(screen.getByLabelText('Description'), 'Tickets')
+    await user.type(screen.getByLabelText('Amount (€)'), '30')
+    await user.selectOptions(screen.getByLabelText('Paid by'), 'Anna')
+    await user.click(screen.getByRole('radio', { name: 'Exact amounts' }))
+    await user.type(screen.getByLabelText('Amount for Anna'), '10')
+
+    // 30 € total, 10 € assigned: 20 € are left, so the button stays disabled.
+    // getByText turns the page's non-breaking space into a normal one before comparing,
+    // so here we write a normal space before €.
+    expect(screen.getByText('Still to assign: 20,00 €')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add expense' })).toBeDisabled()
+
+    await user.type(screen.getByLabelText('Amount for Ben'), '20,00')
+    expect(screen.getByText('Still to assign: 0,00 €')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add expense' }))
+
+    await waitFor(() => expect(listRows()).toHaveLength(4))
+    // An EXACT split sends every member's amount in cents.
+    expect(lastSentBody(fetchMock)).toEqual({
+      description: 'Tickets',
+      amountCents: 3000,
+      paidByMemberId: 10,
+      splitType: 'EXACT',
+      shares: [
+        { memberId: 10, amountCents: 1000 },
+        { memberId: 11, amountCents: 2000 },
+      ],
+    })
+  })
 })
