@@ -31,6 +31,40 @@ function unsettledData(): BackendData {
   }
 }
 
+/** Cem paid Anna 40 €, as the backend returns it. Noon UTC is the same day in every time zone near us. */
+const cemPaidAnna: Payment = {
+  id: 7,
+  groupId: 1,
+  fromMemberId: 3,
+  fromMemberName: 'Cem',
+  toMemberId: 1,
+  toMemberName: 'Anna',
+  amountCents: 4000,
+  createdAt: '2026-11-17T12:00:00Z',
+}
+
+/** Ben paid Anna 10 €. */
+const benPaidAnna: Payment = {
+  ...cemPaidAnna,
+  id: 8,
+  fromMemberId: 2,
+  fromMemberName: 'Ben',
+  amountCents: 1000,
+}
+
+/** The state after both payments: every balance is 0 and nothing is left to transfer. */
+function settledData(): BackendData {
+  return {
+    balances: [
+      { memberId: 1, memberName: 'Anna', balanceCents: 0 },
+      { memberId: 2, memberName: 'Ben', balanceCents: 0 },
+      { memberId: 3, memberName: 'Cem', balanceCents: 0 },
+    ],
+    transfers: [],
+    payments: [cemPaidAnna, benPaidAnna],
+  }
+}
+
 /**
  * Replaces fetch with a fake backend. GET requests are answered from `data`.
  * POST requests are answered by `onWrite`, which each test can choose.
@@ -92,5 +126,21 @@ describe('BalancesPage', () => {
     ])
     expect(screen.getByText('No payments yet.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '← Back to the group' })).toHaveAttribute('href', '/groups/1')
+  })
+
+  it('shows a message and the payments when everyone is settled up', async () => {
+    mockBackend(settledData())
+
+    renderBalancesPage()
+
+    expect(await screen.findByText('Everyone is settled up. 🎉')).toBeInTheDocument()
+    expect(listRows()).toEqual([
+      'Anna is settled up 0,00 €',
+      'Ben is settled up 0,00 €',
+      'Cem is settled up 0,00 €',
+      'Cem paid Anna 40,00 € 17.11.2026',
+      'Ben paid Anna 10,00 € 17.11.2026',
+    ])
+    expect(screen.queryByRole('button', { name: 'Mark as paid' })).not.toBeInTheDocument()
   })
 })
