@@ -197,6 +197,9 @@ function GroupPage() {
       {group && (
         <>
           <h2>{group.name}</h2>
+          <p>
+            <Link to={`/groups/${group.id}/balances`}>Balances and settle up →</Link>
+          </p>
           <h3>Members</h3>
           {members.length === 0 && <p>No members yet.</p>}
           <ul className="member-list">
