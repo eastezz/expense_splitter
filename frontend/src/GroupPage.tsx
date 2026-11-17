@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import {
   addMember,
   createExpense,
+  deleteExpense,
   getGroup,
   listExpenses,
   listMembers,
@@ -51,6 +52,8 @@ function GroupPage() {
   const [exactAmounts, setExactAmounts] = useState<Record<number, string>>({})
   // The error from the last "Add expense" attempt, or null.
   const [expenseError, setExpenseError] = useState<string | null>(null)
+  // The error from the last "Delete" click, or null.
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -159,6 +162,20 @@ function GroupPage() {
     }
   }
 
+  // Deletes one expense in the backend, then removes it from the list on screen.
+  async function handleDeleteExpense(expenseId: number) {
+    if (group === null) {
+      return
+    }
+    setDeleteError(null)
+    try {
+      await deleteExpense(group.id, expenseId)
+      setExpenses(expenses.filter((expense) => expense.id !== expenseId))
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Unknown error')
+    }
+  }
+
   // Finds a member's name by id, e.g. to show who paid an expense.
   function nameOf(memberId: number): string {
     const member = members.find((m) => m.id === memberId)
@@ -208,10 +225,24 @@ function GroupPage() {
               <li key={expense.id}>
                 <span className="expense-description">{expense.description}</span>{' '}
                 <span className="expense-amount">{formatCents(expense.amountCents)}</span>{' '}
-                <span className="expense-payer">paid by {nameOf(expense.paidByMemberId)}</span>
+                <span className="expense-payer">paid by {nameOf(expense.paidByMemberId)}</span>{' '}
+                {/* aria-label tells screen readers (and tests) which expense this button deletes. */}
+                <button
+                  type="button"
+                  className="delete-button"
+                  aria-label={`Delete ${expense.description}`}
+                  onClick={() => handleDeleteExpense(expense.id)}
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
+          {deleteError && (
+            <p role="alert" className="error">
+              Could not delete expense: {deleteError}
+            </p>
+          )}
           <h3>New expense</h3>
           {members.length === 0 ? (
             <p>Add members before adding expenses.</p>
