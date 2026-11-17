@@ -12,14 +12,9 @@ import {
   type Member,
   type SplitType,
 } from './api'
+import { parseGroupId } from './groupId'
 import { formatCents, parseEuroToCents } from './money'
 import './GroupPage.css'
-
-/** Turns the id from the URL into a number, or null if it is not a positive whole number. */
-function parseGroupId(text: string | undefined): number | null {
-  const id = Number(text)
-  return Number.isInteger(id) && id > 0 ? id : null
-}
 
 /** The page of one group, at /groups/:groupId. Loads the group and shows its name. */
 function GroupPage() {
