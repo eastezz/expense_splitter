@@ -1,0 +1,171 @@
+/* Styles for the group page: members, expenses and their forms. */
+
+h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+/* The members and the expenses are shown as boxes with one row per entry,
+   the same look as the groups list on the start page. */
+.member-list,
+.expense-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.member-list li,
+.expense-list li {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.member-list li:last-child,
+.expense-list li:last-child {
+  border-bottom: none;
+}
+
+/* An empty list would show as an empty box, so hide it. */
+.member-list:empty,
+.expense-list:empty {
+  display: none;
+}
+
+/* One expense row: description on the left, then amount, payer and the delete button. */
+.expense-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.expense-description {
+  flex: 1;
+  font-weight: 600;
+}
+
+/* tabular-nums gives every digit the same width, so amounts line up. */
+.expense-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-payer {
+  color: #59636e;
+}
+
+/* Both forms: each label on its own line above its input. */
+.member-form,
+.expense-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.member-form label,
+.expense-form > label {
+  flex-basis: 100%;
+  font-weight: 600;
+}
+
+.member-form input {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.expense-form > input,
+.expense-form > select {
+  flex-basis: 100%;
+}
+
+.member-form input,
+.expense-form input[type='text'],
+.expense-form select {
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background-color: #ffffff;
+}
+
+/* The "Split" and "Shared by" boxes. */
+.expense-form fieldset {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0.5rem 1rem 0.75rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+.expense-form legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+
+.expense-split label {
+  margin-right: 1.5rem;
+}
+
+/* One member per row: checkbox and name on the left, the exact amount on the right. */
+.share-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.share-row input[type='text'] {
+  width: 7rem;
+  text-align: right;
+}
+
+.remaining {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+/* The blue main buttons, the same look as "Create group". */
+.member-form button,
+.expense-form button {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: #ffffff;
+  background-color: #1f6feb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.member-form button:hover:not(:disabled),
+.expense-form button:hover:not(:disabled) {
+  background-color: #1858c4;
+}
+
+/* A disabled button looks grey and faded, and the cursor shows it can't be clicked. */
+.member-form button:disabled,
+.expense-form button:disabled {
+  background-color: #8c959f;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* The delete button is small and red, so it is not mistaken for a main action. */
+.delete-button {
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #cf222e;
+  background-color: transparent;
+  border: 1px solid #cf222e;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  color: #ffffff;
+  background-color: #cf222e;
+}

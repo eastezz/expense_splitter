@@ -13,6 +13,7 @@ import {
   type SplitType,
 } from './api'
 import { formatCents, parseEuroToCents } from './money'
+import './GroupPage.css'
 
 /** Turns the id from the URL into a number, or null if it is not a positive whole number. */
 function parseGroupId(text: string | undefined): number | null {
