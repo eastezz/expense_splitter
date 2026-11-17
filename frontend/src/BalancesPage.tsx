@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import { getGroup, listBalances, type Balance, type Group } from './api'
 import { parseGroupId } from './groupId'
 import { formatCents } from './money'
+import './BalancesPage.css'
 
 /** Shows the sign of a balance: 5000 -> "+50,00 €", -1000 -> "-10,00 €", 0 -> "0,00 €". */
 function formatSignedCents(cents: number): string {
@@ -19,6 +20,17 @@ function balanceWording(cents: number): string {
     return 'owes'
   }
   return 'is settled up'
+}
+
+/** The CSS class that colors a balance: green when positive, red when negative. */
+function balanceClass(cents: number): string {
+  if (cents > 0) {
+    return 'balance-positive'
+  }
+  if (cents < 0) {
+    return 'balance-negative'
+  }
+  return 'balance-zero'
 }
 
 /**
@@ -72,7 +84,7 @@ function BalancesPage() {
           {balances.length === 0 && <p>No members yet.</p>}
           <ul className="balance-list">
             {balances.map((balance) => (
-              <li key={balance.memberId}>
+              <li key={balance.memberId} className={balanceClass(balance.balanceCents)}>
                 <span className="balance-name">{balance.memberName}</span>{' '}
                 <span className="balance-wording">{balanceWording(balance.balanceCents)}</span>{' '}
                 <span className="balance-amount">{formatSignedCents(balance.balanceCents)}</span>

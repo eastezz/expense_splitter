@@ -1,0 +1,15 @@
+/* Styles for the balances page. */
+
+/* Green: the group owes this member money. Red: this member owes money. */
+.balance-positive .balance-amount {
+  color: #1a7f37;
+}
+
+.balance-negative .balance-amount {
+  color: #cf222e;
+}
+
+/* Exactly 0: grey, because there is nothing to do. */
+.balance-zero .balance-amount {
+  color: #59636e;
+}
