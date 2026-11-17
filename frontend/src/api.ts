@@ -191,3 +191,36 @@ export async function listSettlements(groupId: number): Promise<Transfer[]> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/** A recorded payment as the backend returns it: one member paid another back, in whole cents. */
+export type Payment = {
+  id: number
+  groupId: number
+  fromMemberId: number
+  fromMemberName: string
+  toMemberId: number
+  toMemberName: string
+  amountCents: number
+  createdAt: string
+}
+
+/** What we send to record a payment (the backend's CreatePaymentRequest). */
+export type NewPayment = {
+  fromMemberId: number
+  toMemberId: number
+  amountCents: number
+}
+
+/**
+ * Records a payment in a group (POST /api/groups/{groupId}/payments) and returns it.
+ * The backend answers 201 Created with the saved payment, or 400 with a message if it is invalid.
+ */
+export async function createPayment(groupId: number, payment: NewPayment): Promise<Payment> {
+  const response = await fetch(`/api/groups/${groupId}/payments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payment),
+  })
+  await throwIfNotOk(response)
+  return response.json()
+}
