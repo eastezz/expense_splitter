@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import GroupsPage from './GroupsPage'
 
@@ -10,6 +11,15 @@ function mockFetch(body: unknown, status = 200) {
   return fetchMock
 }
 
+/** Renders the start page inside a router, because its group links need one. */
+function renderPage() {
+  render(
+    <MemoryRouter>
+      <GroupsPage />
+    </MemoryRouter>,
+  )
+}
+
 describe('GroupsPage', () => {
   it('lists the groups from the backend', async () => {
     mockFetch([
@@ -17,18 +27,20 @@ describe('GroupsPage', () => {
       { id: 2, name: 'Flat share' },
     ])
 
-    render(<GroupsPage />)
+    renderPage()
 
     // findBy... waits until the element shows up (the fetch is asynchronous).
     expect(await screen.findByText('Trip to Berlin')).toBeInTheDocument()
     expect(screen.getByText('Flat share')).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    // Each name is a link to that group's page.
+    expect(screen.getByRole('link', { name: 'Trip to Berlin' })).toHaveAttribute('href', '/groups/1')
   })
 
   it('shows a message when there are no groups', async () => {
     mockFetch([])
 
-    render(<GroupsPage />)
+    renderPage()
 
     expect(await screen.findByText('No groups yet.')).toBeInTheDocument()
     // queryBy... returns null instead of failing, so we can check something is NOT there.
@@ -43,7 +55,7 @@ describe('GroupsPage', () => {
       500,
     )
 
-    render(<GroupsPage />)
+    renderPage()
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Could not load groups: Database is down')
@@ -60,7 +72,7 @@ describe('GroupsPage', () => {
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
 
-    render(<GroupsPage />)
+    renderPage()
     await screen.findByText('No groups yet.')
 
     const input = screen.getByLabelText('New group name')

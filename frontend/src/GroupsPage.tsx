@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { createGroup, listGroups, type Group } from './api'
 import './GroupsPage.css'
 
@@ -50,7 +51,10 @@ function GroupsPage() {
       {!loading && !error && groups.length === 0 && <p>No groups yet.</p>}
       <ul className="group-list">
         {groups.map((group) => (
-          <li key={group.id}>{group.name}</li>
+          <li key={group.id}>
+            {/* Link changes the URL without reloading the page; the router then shows GroupPage. */}
+            <Link to={`/groups/${group.id}`}>{group.name}</Link>
+          </li>
         ))}
       </ul>
       <form
