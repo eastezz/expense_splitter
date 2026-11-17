@@ -191,4 +191,19 @@ describe('GroupPage', () => {
       ],
     })
   })
+
+  it('deletes an expense and removes it from the list', async () => {
+    // DELETE answers 204 No Content: an empty body.
+    const fetchMock = mockBackend(() => new Response(null, { status: 204 }))
+    const user = userEvent.setup()
+
+    renderGroupPage()
+    await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
+
+    await user.click(screen.getByRole('button', { name: 'Delete Dinner' }))
+
+    expect(await screen.findByText('No expenses yet.')).toBeInTheDocument()
+    expect(listRows()).toEqual(['Anna', 'Ben'])
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/groups/1/expenses/100', { method: 'DELETE' })
+  })
 })
