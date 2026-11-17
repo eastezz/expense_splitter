@@ -62,6 +62,12 @@ function listRows(): (string | null)[] {
   return screen.getAllByRole('listitem').map((item) => item.textContent)
 }
 
+/** Reads the JSON body that the page sent with the last fetch call. */
+function lastSentBody(fetchMock: ReturnType<typeof mockBackend>): unknown {
+  const init = fetchMock.mock.lastCall?.[1]
+  return JSON.parse(String(init?.body))
+}
+
 describe('GroupPage', () => {
   it('shows the group name, its members and its expenses', async () => {
     mockBackend()
@@ -96,5 +102,43 @@ describe('GroupPage', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Cem' }),
     })
+  })
+
+  it('adds an equal expense shared by the ticked members', async () => {
+    const taxi = {
+      id: 101,
+      groupId: 1,
+      description: 'Taxi',
+      amountCents: 1250,
+      paidByMemberId: 11,
+      splitType: 'EQUAL',
+      createdAt: '2026-11-02T08:00:00Z',
+      shares: [{ memberId: 11, memberName: 'Ben', shareCents: 1250 }],
+    }
+    const fetchMock = mockBackend(() => Response.json(taxi, { status: 201 }))
+    const user = userEvent.setup()
+
+    renderGroupPage()
+    await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
+
+    await user.type(screen.getByLabelText('Description'), 'Taxi')
+    await user.type(screen.getByLabelText('Amount (€)'), '12,50')
+    await user.selectOptions(screen.getByLabelText('Paid by'), 'Ben')
+    // Only Ben takes the taxi, so we untick Anna.
+    await user.click(screen.getByRole('checkbox', { name: 'Anna' }))
+    await user.click(screen.getByRole('button', { name: 'Add expense' }))
+
+    await waitFor(() => expect(listRows()).toHaveLength(4))
+    expect(fetchMock.mock.lastCall?.[0]).toBe('/api/groups/1/expenses')
+    // An EQUAL split sends only member ids; the backend calculates the amounts.
+    expect(lastSentBody(fetchMock)).toEqual({
+      description: 'Taxi',
+      amountCents: 1250,
+      paidByMemberId: 11,
+      splitType: 'EQUAL',
+      shares: [{ memberId: 11 }],
+    })
+    // After success the form is empty again.
+    expect(screen.getByLabelText('Description')).toHaveValue('')
   })
 })
