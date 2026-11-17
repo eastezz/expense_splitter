@@ -154,3 +154,21 @@ export async function getGroup(groupId: number): Promise<Group> {
   await throwIfNotOk(response)
   return response.json()
 }
+
+/**
+ * One member's balance as the backend returns it, in whole cents.
+ * Above 0: the group owes this member money (they get money back).
+ * Below 0: this member owes the group money.
+ */
+export type Balance = {
+  memberId: number
+  memberName: string
+  balanceCents: number
+}
+
+/** Asks the backend for every member's balance in a group (GET /api/groups/{groupId}/balances). */
+export async function listBalances(groupId: number): Promise<Balance[]> {
+  const response = await fetch(`/api/groups/${groupId}/balances`)
+  await throwIfNotOk(response)
+  return response.json()
+}
