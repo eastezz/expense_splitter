@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router'
+import BalancesPage from './BalancesPage'
 import GroupPage from './GroupPage'
 import GroupsPage from './GroupsPage'
 
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<GroupsPage />} />
         <Route path="/groups/:groupId" element={<GroupPage />} />
+        <Route path="/groups/:groupId/balances" element={<BalancesPage />} />
       </Routes>
     </main>
   )
