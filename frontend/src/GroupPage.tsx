@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { getGroup, listMembers, type Group, type Member } from './api'
+import { addMember, getGroup, listMembers, type Group, type Member } from './api'
 
 /** Turns the id from the URL into a number, or null if it is not a positive whole number. */
 function parseGroupId(text: string | undefined): number | null {
@@ -20,6 +20,10 @@ function GroupPage() {
   const [members, setMembers] = useState<Member[]>([])
   // The error message to show, or null when there is no error.
   const [error, setError] = useState<string | null>(null)
+  // What the user has typed into the "New member name" box.
+  const [memberName, setMemberName] = useState('')
+  // The error from the last "Add member" attempt, or null.
+  const [memberError, setMemberError] = useState<string | null>(null)
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -42,6 +46,21 @@ function GroupPage() {
     load(id)
   }, [id])
 
+  // Sends the new member to the backend, then shows it in the list.
+  async function handleAddMember() {
+    if (group === null) {
+      return
+    }
+    setMemberError(null)
+    try {
+      const created = await addMember(group.id, memberName.trim())
+      setMembers([...members, created])
+      setMemberName('')
+    } catch (err) {
+      setMemberError(err instanceof Error ? err.message : 'Unknown error')
+    }
+  }
+
   return (
     <section>
       <p>
@@ -60,6 +79,24 @@ function GroupPage() {
               <li key={member.id}>{member.name}</li>
             ))}
           </ul>
+          <form
+            className="member-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              handleAddMember()
+            }}
+          >
+            <label htmlFor="member-name">New member name</label>
+            <input
+              id="member-name"
+              value={memberName}
+              onChange={(event) => setMemberName(event.target.value)}
+            />
+            <button type="submit" disabled={memberName.trim() === ''}>
+              Add member
+            </button>
+          </form>
+          {memberError && <p role="alert" className="error">Could not add member: {memberError}</p>}
         </>
       )}
     </section>
