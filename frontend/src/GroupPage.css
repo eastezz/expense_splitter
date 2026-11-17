@@ -81,7 +81,9 @@ h3 {
   flex-basis: 100%;
 }
 
+/* `.expense-form > input` also catches the description box, which has no type attribute. */
 .member-form input,
+.expense-form > input,
 .expense-form input[type='text'],
 .expense-form select {
   padding: 0.5rem 0.75rem;
