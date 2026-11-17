@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import {
+  createPayment,
   getGroup,
   listBalances,
   listSettlements,
@@ -81,6 +82,18 @@ function BalancesPage() {
     load(id)
   }, [id])
 
+  // Records that one suggested transfer has been paid, by saving it as a payment.
+  async function handleMarkPaid(transfer: Transfer) {
+    if (group === null) {
+      return
+    }
+    await createPayment(group.id, {
+      fromMemberId: transfer.fromMemberId,
+      toMemberId: transfer.toMemberId,
+      amountCents: transfer.amountCents,
+    })
+  }
+
   return (
     <section>
       <p>
@@ -114,7 +127,10 @@ function BalancesPage() {
                 <span className="transfer-text">
                   {transfer.fromMemberName} pays {transfer.toMemberName}
                 </span>{' '}
-                <span className="transfer-amount">{formatCents(transfer.amountCents)}</span>
+                <span className="transfer-amount">{formatCents(transfer.amountCents)}</span>{' '}
+                <button type="button" className="pay-button" onClick={() => handleMarkPaid(transfer)}>
+                  Mark as paid
+                </button>
               </li>
             ))}
           </ul>
