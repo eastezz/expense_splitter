@@ -41,6 +41,9 @@ function GroupPage() {
   const [amountText, setAmountText] = useState('')
   // The id of the member who paid, as text from the <select>. '' means nobody chosen yet.
   const [payerId, setPayerId] = useState('')
+  // The ids of members whose box is NOT ticked. Everyone else shares the expense.
+  // We store the unticked ones, so a newly added member is ticked automatically.
+  const [excludedIds, setExcludedIds] = useState<number[]>([])
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -82,12 +85,27 @@ function GroupPage() {
 
   // The amount in cents, or null while the amount box holds no valid amount.
   const amountCents = parseEuroToCents(amountText)
+  // The members whose box is ticked: they share the expense.
+  const participants = members.filter((member) => !excludedIds.includes(member.id))
   // The form may only be sent when every field holds something useful.
   const canAddExpense =
-    description.trim() !== '' && amountCents !== null && amountCents > 0 && payerId !== ''
+    description.trim() !== '' &&
+    amountCents !== null &&
+    amountCents > 0 &&
+    payerId !== '' &&
+    participants.length > 0
+
+  // Ticks or unticks one member's "shared by" box.
+  function toggleParticipant(memberId: number) {
+    if (excludedIds.includes(memberId)) {
+      setExcludedIds(excludedIds.filter((excludedId) => excludedId !== memberId))
+    } else {
+      setExcludedIds([...excludedIds, memberId])
+    }
+  }
 
   // Sends the new expense to the backend, then shows it in the list and empties the form.
-  // For now the cost is split equally among all members.
+  // The cost is split equally among the ticked members.
   async function handleAddExpense() {
     if (group === null || amountCents === null) {
       return
@@ -97,12 +115,13 @@ function GroupPage() {
       amountCents,
       paidByMemberId: Number(payerId),
       splitType: 'EQUAL',
-      shares: members.map((member) => ({ memberId: member.id })),
+      shares: participants.map((member) => ({ memberId: member.id })),
     })
     setExpenses([...expenses, created])
     setDescription('')
     setAmountText('')
     setPayerId('')
+    setExcludedIds([])
   }
 
   // Finds a member's name by id, e.g. to show who paid an expense.
@@ -199,6 +218,20 @@ function GroupPage() {
                   </option>
                 ))}
               </select>
+              {/* A fieldset groups related inputs; its legend is read out as their common title. */}
+              <fieldset className="expense-shares">
+                <legend>Shared by</legend>
+                {members.map((member) => (
+                  <label key={member.id}>
+                    <input
+                      type="checkbox"
+                      checked={!excludedIds.includes(member.id)}
+                      onChange={() => toggleParticipant(member.id)}
+                    />{' '}
+                    {member.name}
+                  </label>
+                ))}
+              </fieldset>
               <button type="submit" disabled={!canAddExpense}>
                 Add expense
               </button>
