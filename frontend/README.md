@@ -1,32 +1,17 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The React frontend of [expense_splitter](../README.md), written in TypeScript and built with Vite.
 
-Currently, two official plugins are available:
+| Command | What it does |
+|---|---|
+| `npm install` | Install the dependencies |
+| `npm run dev` | Start the dev server on http://localhost:5173 (forwards `/api` to the backend on port 8080) |
+| `npm test` | Run the tests with Vitest |
+| `npm run lint` | Check the code with oxlint |
+| `npm run build` | Type-check and build the app into `dist/` |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `src/api.ts` has every call to the backend.
+- `src/money.ts` converts between cents and the text shown in the app: 1234 becomes "12,34 €", and "12,34" typed by the user becomes 1234.
+- Each page (`GroupsPage`, `GroupPage`, `BalancesPage`) has its own CSS file and test file next to it.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+In Docker, [nginx.conf](nginx.conf) serves the built app and forwards `/api` to the backend.
