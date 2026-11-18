@@ -58,3 +58,16 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Check the compose file
+        run: docker compose config --quiet
+
+      - name: Build all Docker images
+        run: docker compose build
