@@ -1,0 +1,12 @@
+# Files Docker does not need to build the frontend image.
+# node_modules and dist are created fresh inside the image by "npm ci" and "npm run build".
+node_modules/
+dist/
+dist-ssr/
+*.log
+*.local
+.vscode/
+.idea/
+.DS_Store
+.gitignore
+README.md
