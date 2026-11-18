@@ -20,7 +20,7 @@ CREATE TABLE expenses (
     description       VARCHAR(100)                NOT NULL,
     amount_cents      BIGINT                      NOT NULL,
     paid_by_member_id BIGINT                      NOT NULL REFERENCES members (id),
-    split_type        VARCHAR(10)                 NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT')),
+    split_type        VARCHAR(10)                 NOT NULL,
     created_at        TIMESTAMP(6) WITH TIME ZONE NOT NULL
 );
 
