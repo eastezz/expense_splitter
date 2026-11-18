@@ -1,0 +1,13 @@
+# Files Docker does not need to build the backend image.
+# Leaving them out makes the build faster and keeps local build output out of the image.
+target/
+HELP.md
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+.factorypath
+.gitignore
+.gitattributes
