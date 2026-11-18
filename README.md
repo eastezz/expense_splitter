@@ -50,7 +50,21 @@ $group = Invoke-RestMethod -Method Post "$api/groups" -ContentType "application/
 Invoke-RestMethod -Method Post "$api/groups/$($group.id)/members" -ContentType "application/json" -Body '{"name":"Anna"}'
 ```
 
-The data is kept in an in-memory H2 database, so it is gone after a restart.
+This way the data is kept in an in-memory H2 database, so it is gone after a restart. To keep it, run the app with Docker (see below).
+
+## Run with Docker
+
+The whole app (PostgreSQL, the Spring Boot backend and the React frontend) starts with one command. You only need [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```powershell
+docker compose up --build
+```
+
+Then open http://localhost:3000. The backend is also reachable directly at http://localhost:8080/swagger-ui.html. Stop everything with `docker compose down`.
+
+- The tables are created by the Flyway migrations in [db/migration](backend/src/main/resources/db/migration). Hibernate only checks that they match the entities (`ddl-auto=validate`).
+- The data is stored in the Docker volume `db-data`, so it survives `docker compose down` and a restart. `docker compose down -v` deletes it.
+- To use your own database password, copy `.env.example` to `.env` and change the values there. `.env` is ignored by Git.
 
 ## Endpoints
 
@@ -85,5 +99,5 @@ The 67 tests check the split rounding, the balances, the settle-up (including a 
 - [x] REST API for groups, members, expenses, balances, settle-up and payments
 - [x] Tests and a GitHub Actions workflow that runs them
 - [ ] React frontend
-- [ ] PostgreSQL with Flyway and Docker Compose
+- [x] PostgreSQL with Flyway and Docker Compose
 - [ ] Login
