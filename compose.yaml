@@ -18,5 +18,18 @@ services:
       timeout: 5s
       retries: 10
 
+  backend:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-fairshare}
+      DB_USER: ${POSTGRES_USER:-fairshare}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-fairshare}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:
