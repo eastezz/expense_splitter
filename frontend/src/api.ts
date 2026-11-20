@@ -37,13 +37,98 @@ export async function throwIfNotOk(response: Response): Promise<void> {
   throw new Error(message)
 }
 
+/** Reads one cookie by name from document.cookie (which looks like "a=1; b=2"), or null if it is not set. */
+function readCookie(name: string): string | null {
+  for (const part of document.cookie.split('; ')) {
+    const [key, ...rest] = part.split('=')
+    if (key === name) {
+      return decodeURIComponent(rest.join('='))
+    }
+  }
+  return null
+}
+
+/**
+ * Adds the CSRF token to a request that changes data (POST, DELETE, …).
+ * The backend puts a random token into the cookie XSRF-TOKEN. Only JavaScript running on our own
+ * site can read that cookie, so sending the token back in the header X-XSRF-TOKEN proves that the
+ * request really comes from our app and not from another website.
+ * Without the cookie the request stays exactly as it was.
+ */
+export function withCsrf(init: RequestInit): RequestInit {
+  const token = readCookie('XSRF-TOKEN')
+  if (token === null) {
+    return init
+  }
+  return {
+    ...init,
+    headers: { ...(init.headers as Record<string, string> | undefined), 'X-XSRF-TOKEN': token },
+  }
+}
+
+/** A user account as the backend returns it. The password is never sent back. */
+export type User = {
+  id: number
+  email: string
+}
+
+/** Creates an account (POST /api/auth/register). A taken email gives 409 with the backend's message. */
+export async function register(email: string, password: string): Promise<User> {
+  const response = await fetch(
+    '/api/auth/register',
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    }),
+  )
+  await throwIfNotOk(response)
+  return response.json()
+}
+
+/**
+ * Logs in (POST /api/auth/login). The backend answers with the session cookie,
+ * which the browser keeps and sends along with every later request by itself.
+ */
+export async function login(email: string, password: string): Promise<User> {
+  const response = await fetch(
+    '/api/auth/login',
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    }),
+  )
+  await throwIfNotOk(response)
+  return response.json()
+}
+
+/** Logs out (POST /api/auth/logout): the backend ends the session and deletes the cookie. */
+export async function logout(): Promise<void> {
+  const response = await fetch('/api/auth/logout', withCsrf({ method: 'POST' }))
+  await throwIfNotOk(response)
+}
+
+/** Who is logged in right now (GET /api/auth/me), or null if nobody is (the backend answers 401). */
+export async function getCurrentUser(): Promise<User | null> {
+  const response = await fetch('/api/auth/me')
+  if (response.status === 401) {
+    return null
+  }
+  await throwIfNotOk(response)
+  return response.json()
+}
+
 /** Creates a new group (POST /api/groups) and returns it as the backend saved it. */
 export async function createGroup(name: string): Promise<Group> {
-  const response = await fetch('/api/groups', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  })
+  const response = await fetch(
+    '/api/groups',
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    }),
+  )
   await throwIfNotOk(response)
   return response.json()
 }
@@ -67,11 +152,14 @@ export async function listMembers(groupId: number): Promise<Member[]> {
  * If the name is already taken in this group, the backend answers 409 and we throw its message.
  */
 export async function addMember(groupId: number, name: string): Promise<Member> {
-  const response = await fetch(`/api/groups/${groupId}/members`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  })
+  const response = await fetch(
+    `/api/groups/${groupId}/members`,
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    }),
+  )
   await throwIfNotOk(response)
   return response.json()
 }
@@ -125,11 +213,14 @@ export type NewExpense = {
 
 /** Creates an expense in a group (POST /api/groups/{groupId}/expenses) and returns it. */
 export async function createExpense(groupId: number, expense: NewExpense): Promise<Expense> {
-  const response = await fetch(`/api/groups/${groupId}/expenses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(expense),
-  })
+  const response = await fetch(
+    `/api/groups/${groupId}/expenses`,
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(expense),
+    }),
+  )
   await throwIfNotOk(response)
   return response.json()
 }
@@ -139,9 +230,10 @@ export async function createExpense(groupId: number, expense: NewExpense): Promi
  * The backend answers 204 No Content, so there is no body to read and we return nothing.
  */
 export async function deleteExpense(groupId: number, expenseId: number): Promise<void> {
-  const response = await fetch(`/api/groups/${groupId}/expenses/${expenseId}`, {
-    method: 'DELETE',
-  })
+  const response = await fetch(
+    `/api/groups/${groupId}/expenses/${expenseId}`,
+    withCsrf({ method: 'DELETE' }),
+  )
   await throwIfNotOk(response)
 }
 
@@ -216,11 +308,14 @@ export type NewPayment = {
  * The backend answers 201 Created with the saved payment, or 400 with a message if it is invalid.
  */
 export async function createPayment(groupId: number, payment: NewPayment): Promise<Payment> {
-  const response = await fetch(`/api/groups/${groupId}/payments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payment),
-  })
+  const response = await fetch(
+    `/api/groups/${groupId}/payments`,
+    withCsrf({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payment),
+    }),
+  )
   await throwIfNotOk(response)
   return response.json()
 }
