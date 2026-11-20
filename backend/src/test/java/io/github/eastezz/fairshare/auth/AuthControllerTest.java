@@ -1,6 +1,7 @@
 package io.github.eastezz.fairshare.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,15 +11,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import io.github.eastezz.fairshare.user.UserAccount;
 import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /**
- * Tests POST /api/auth/register with the whole application running against H2.
+ * Tests register, login, "me" and logout under /api/auth with the whole application running against H2.
  * All tests share one database, so each test uses its own email address.
  */
 @SpringBootTest
@@ -38,6 +41,65 @@ class AuthControllerTest {
 		return mockMvc.perform(post("/api/auth/register")
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
+	}
+
+	private ResultActions login(String email, String password) throws Exception {
+		return mockMvc.perform(post("/api/auth/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
+	}
+
+	/** Logs in and returns the session, like a browser that keeps the JSESSIONID cookie. */
+	private MockHttpSession loginAndGetSession(String email, String password) throws Exception {
+		MvcResult result = login(email, password).andExpect(status().isOk()).andReturn();
+		return (MockHttpSession) result.getRequest().getSession(false);
+	}
+
+	@Test
+	void loginWithRightPasswordStartsASession() throws Exception {
+		register("eva@example.de", "secret123").andExpect(status().isCreated());
+
+		// Other letters in the email still log in to the same account.
+		MockHttpSession session = loginAndGetSession("EVA@example.de", "secret123");
+
+		mockMvc.perform(get("/api/auth/me").session(session))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.email").value("eva@example.de"));
+	}
+
+	@Test
+	void loginWithWrongPasswordReturns401() throws Exception {
+		register("felix@example.de", "secret123").andExpect(status().isCreated());
+
+		login("felix@example.de", "wrong-password")
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.detail").value("Wrong email or password"));
+	}
+
+	@Test
+	void loginWithUnknownEmailGivesTheSameAnswer() throws Exception {
+		// Same message as a wrong password, so nobody can find out which emails have an account.
+		login("nobody@example.de", "secret123")
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.detail").value("Wrong email or password"));
+	}
+
+	@Test
+	void meWithoutLoginReturns401() throws Exception {
+		mockMvc.perform(get("/api/auth/me"))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.detail").value("Not logged in"));
+	}
+
+	@Test
+	void logoutEndsTheSession() throws Exception {
+		register("greta@example.de", "secret123").andExpect(status().isCreated());
+		MockHttpSession session = loginAndGetSession("greta@example.de", "secret123");
+
+		mockMvc.perform(post("/api/auth/logout").session(session)).andExpect(status().isNoContent());
+
+		assertThat(session.isInvalid()).isTrue();
+		mockMvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
 	}
 
 	@Test

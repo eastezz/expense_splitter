@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import io.github.eastezz.fairshare.auth.EmailAlreadyRegisteredException;
+import io.github.eastezz.fairshare.auth.InvalidCredentialsException;
 import io.github.eastezz.fairshare.auth.InvalidPasswordException;
+import io.github.eastezz.fairshare.auth.NotLoggedInException;
 import io.github.eastezz.fairshare.expense.ExpenseNotFoundException;
 import io.github.eastezz.fairshare.expense.InvalidExpenseException;
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
@@ -79,6 +81,22 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleInvalidPassword(InvalidPasswordException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
 		problem.setTitle("Invalid password");
+		return problem;
+	}
+
+	/** Wrong email or password at login: 401 Unauthorized. */
+	@ExceptionHandler(InvalidCredentialsException.class)
+	public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+		problem.setTitle("Unauthorized");
+		return problem;
+	}
+
+	/** Nobody is logged in: 401 Unauthorized. */
+	@ExceptionHandler(NotLoggedInException.class)
+	public ProblemDetail handleNotLoggedIn(NotLoggedInException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+		problem.setTitle("Unauthorized");
 		return problem;
 	}
 
