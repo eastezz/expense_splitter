@@ -8,8 +8,11 @@
   margin: 0 0 1rem;
   padding: 0;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  /* Keeps the colored row under the mouse inside the rounded corners. */
+  overflow: hidden;
 }
 
 /* Each row: text on the left, the amount (and the button) pushed to the right. */
@@ -95,5 +98,5 @@
   font-weight: 600;
   background-color: var(--color-success-bg);
   border: 1px solid var(--color-success-border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
 }

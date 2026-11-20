@@ -5,14 +5,37 @@
   margin: 0 0 1.5rem;
   padding: 0;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  /* Keeps the colored row under the mouse inside the rounded corners. */
+  overflow: hidden;
 }
 
 /* Each group is one row; a thin line separates the rows. */
 .group-list li {
-  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--color-border);
+}
+
+/* The whole row is the link, so it is easy to hit (also with a finger on a phone),
+   and it lights up under the mouse. The arrow on the right shows that it opens something. */
+.group-list a {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.group-list a::after {
+  content: '›';
+  color: var(--color-text-muted);
+}
+
+.group-list a:hover {
+  background-color: var(--color-surface-hover);
 }
 
 .group-list li:last-child {

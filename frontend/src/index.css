@@ -24,6 +24,11 @@
   --color-success-bg: #dafbe1;    /* background of the "settled up" box */
   --color-success-border: #aceebb;
   --color-link: #0969da;          /* links like "← All groups" */
+  --color-surface-hover: #f0f3f6; /* a clickable row under the mouse */
+
+  /* Shape and depth of the boxes (cards). */
+  --radius-card: 12px;
+  --shadow-card: 0 1px 2px rgb(31 35 40 / 6%), 0 2px 6px rgb(31 35 40 / 6%);
 
   color: var(--color-text);
   background-color: var(--color-bg);
@@ -48,6 +53,8 @@
   --color-success-bg: #12261e;
   --color-success-border: #2ea04366;
   --color-link: #4493f8;
+  --color-surface-hover: #1f2630;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 40%), 0 2px 6px rgb(0 0 0 / 30%);
 }
 
 a {
@@ -77,4 +84,48 @@ h2 {
 
 p {
   margin: 0 0 1rem;
+}
+
+/* Smooth color changes and a short "pressed" effect for every button. */
+button {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Inputs: the border gets darker under the mouse. */
+input,
+select {
+  transition: border-color 0.15s ease;
+}
+
+input:hover,
+select:hover {
+  border-color: var(--color-text-muted);
+}
+
+/* A clear ring around the field, button or link that has the keyboard focus (Tab key). */
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Some people turn off animations in their system settings, because motion makes them dizzy.
+   Then the app switches instantly, without any movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
