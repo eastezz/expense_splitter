@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { createGroup, listGroups, type Group } from './api'
 import './GroupsPage.css'
+import LoadingCard from './LoadingCard'
 
 /** The start page: loads all groups from the backend and lists them. */
 function GroupsPage() {
@@ -46,7 +47,7 @@ function GroupsPage() {
   return (
     <section>
       <h2>Groups</h2>
-      {loading && <p>Loading groups…</p>}
+      {loading && <LoadingCard label="Loading groups…" rows={2} />}
       {error && <p role="alert" className="error">Could not load groups: {error}</p>}
       {!loading && !error && groups.length === 0 && <p>No groups yet.</p>}
       <ul className="group-list">

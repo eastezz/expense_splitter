@@ -1,0 +1,45 @@
+/* Styles for the grey placeholder card that is shown while data is loading. */
+
+/* The same box as the real lists, so nothing jumps when the data arrives. */
+.loading-card {
+  margin: 0 0 1rem;
+  padding: 0.25rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+/* One grey bar per row, about as high as a line of text. */
+.loading-row {
+  height: 0.9rem;
+  margin: 0.95rem 0;
+  border-radius: 6px;
+  /* A lighter stripe moves across the grey bar from left to right ("shimmer"). */
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton) 0%,
+    var(--color-skeleton-shine) 50%,
+    var(--color-skeleton) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+/* The rows have different lengths, so they look like real text. */
+.loading-row:nth-child(odd) {
+  width: 70%;
+}
+
+.loading-row:nth-child(even) {
+  width: 45%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}

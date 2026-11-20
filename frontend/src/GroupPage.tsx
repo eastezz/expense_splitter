@@ -15,6 +15,7 @@ import {
 import { parseGroupId } from './groupId'
 import { formatCents, parseEuroToCents } from './money'
 import './GroupPage.css'
+import LoadingCard from './LoadingCard'
 
 /** The page of one group, at /groups/:groupId. Loads the group and shows its name. */
 function GroupPage() {
@@ -187,7 +188,7 @@ function GroupPage() {
         <Link to="/">← All groups</Link>
       </p>
       {id === null && <p role="alert" className="error">This is not a valid group address.</p>}
-      {id !== null && group === null && error === null && <p>Loading group…</p>}
+      {id !== null && group === null && error === null && <LoadingCard label="Loading group…" />}
       {error && <p role="alert" className="error">Could not load group: {error}</p>}
       {group && (
         <>

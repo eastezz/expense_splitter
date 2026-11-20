@@ -25,6 +25,8 @@
   --color-success-border: #aceebb;
   --color-link: #0969da;          /* links like "← All groups" */
   --color-surface-hover: #f0f3f6; /* a clickable row under the mouse */
+  --color-skeleton: #e6eaef;      /* grey bars while loading */
+  --color-skeleton-shine: #f3f5f8;
 
   /* Shape and depth of the boxes (cards). */
   --radius-card: 12px;
@@ -54,6 +56,8 @@
   --color-success-border: #2ea04366;
   --color-link: #4493f8;
   --color-surface-hover: #1f2630;
+  --color-skeleton: #232a33;
+  --color-skeleton-shine: #2e3641;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 40%), 0 2px 6px rgb(0 0 0 / 30%);
 }
 
@@ -84,6 +88,32 @@ h2 {
 
 p {
   margin: 0 0 1rem;
+}
+
+/* Every page fades in and moves up a tiny bit when it opens, instead of appearing abruptly. */
+main > section {
+  animation: fade-in 0.25s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hidden on screen, but still read by screen readers (used for "Loading…" texts). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* Smooth color changes and a short "pressed" effect for every button. */

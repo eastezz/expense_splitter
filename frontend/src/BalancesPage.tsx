@@ -14,6 +14,7 @@ import {
 import { parseGroupId } from './groupId'
 import { formatCents } from './money'
 import './BalancesPage.css'
+import LoadingCard from './LoadingCard'
 
 /** Shows the sign of a balance: 5000 -> "+50,00 €", -1000 -> "-10,00 €", 0 -> "0,00 €". */
 function formatSignedCents(cents: number): string {
@@ -129,7 +130,7 @@ function BalancesPage() {
         <Link to={`/groups/${groupId}`}>← Back to the group</Link>
       </p>
       {id === null && <p role="alert" className="error">This is not a valid group address.</p>}
-      {id !== null && group === null && error === null && <p>Loading balances…</p>}
+      {id !== null && group === null && error === null && <LoadingCard label="Loading balances…" />}
       {error && <p role="alert" className="error">Could not load balances: {error}</p>}
       {group && (
         <>
