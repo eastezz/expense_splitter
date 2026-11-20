@@ -201,9 +201,29 @@ describe('GroupPage', () => {
     await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
 
     await user.click(screen.getByRole('button', { name: 'Delete Dinner' }))
+    // The first click only asks; nothing is deleted yet.
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/groups/1/expenses/100', { method: 'DELETE' })
+    await user.click(screen.getByRole('button', { name: 'Yes, delete Dinner' }))
 
     expect(await screen.findByText('No expenses yet.')).toBeInTheDocument()
     expect(listRows()).toEqual(['Anna', 'Ben'])
     expect(fetchMock).toHaveBeenLastCalledWith('/api/groups/1/expenses/100', { method: 'DELETE' })
+  })
+
+  it('keeps the expense when the user cancels the delete', async () => {
+    const fetchMock = mockBackend(() => new Response(null, { status: 204 }))
+    const user = userEvent.setup()
+
+    renderGroupPage()
+    await screen.findByRole('heading', { level: 2, name: 'Trip to Berlin' })
+
+    await user.click(screen.getByRole('button', { name: 'Delete Dinner' }))
+    // The safe choice has the keyboard focus, so pressing Enter would cancel.
+    expect(screen.getByRole('button', { name: 'Keep Dinner' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Keep Dinner' }))
+
+    // The normal Delete button is back, and no DELETE request was sent.
+    expect(screen.getByRole('button', { name: 'Delete Dinner' })).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/groups/1/expenses/100', { method: 'DELETE' })
   })
 })

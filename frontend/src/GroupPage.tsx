@@ -52,6 +52,8 @@ function GroupPage() {
   const [expenseError, setExpenseError] = useState<string | null>(null)
   // The error from the last "Delete" click, or null.
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // The expense whose row currently asks "Delete?", or null when no row is asking.
+  const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const showToast = useToast()
 
   // Runs when the page appears, and again if the id in the URL changes.
@@ -234,15 +236,43 @@ function GroupPage() {
                 <span className="expense-description">{expense.description}</span>{' '}
                 <span className="expense-amount">{formatCents(expense.amountCents)}</span>{' '}
                 <span className="expense-payer">paid by {nameOf(expense.paidByMemberId)}</span>{' '}
-                {/* aria-label tells screen readers (and tests) which expense this button deletes. */}
-                <button
-                  type="button"
-                  className="delete-button"
-                  aria-label={`Delete ${expense.description}`}
-                  onClick={() => handleDeleteExpense(expense.id)}
-                >
-                  Delete
-                </button>
+                {confirmingId === expense.id ? (
+                  // Second step: the row asks before anything is deleted.
+                  <span className="delete-confirm">
+                    <span className="delete-question">Delete?</span>
+                    <button
+                      type="button"
+                      className="delete-button delete-button-confirm"
+                      aria-label={`Yes, delete ${expense.description}`}
+                      onClick={() => {
+                        setConfirmingId(null)
+                        handleDeleteExpense(expense.id)
+                      }}
+                    >
+                      Yes, delete
+                    </button>
+                    {/* autoFocus puts the keyboard on "Cancel", the safe choice, so Enter can't delete by accident. */}
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      aria-label={`Keep ${expense.description}`}
+                      onClick={() => setConfirmingId(null)}
+                      autoFocus
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  // aria-label tells screen readers (and tests) which expense this button deletes.
+                  <button
+                    type="button"
+                    className="delete-button"
+                    aria-label={`Delete ${expense.description}`}
+                    onClick={() => setConfirmingId(expense.id)}
+                  >
+                    Delete
+                  </button>
+                )}
               </li>
             ))}
           </ul>

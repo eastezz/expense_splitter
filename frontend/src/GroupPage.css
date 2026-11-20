@@ -174,3 +174,39 @@ h3 {
   color: var(--color-on-primary);
   background-color: var(--color-danger);
 }
+
+/* The question "Delete?" with its two answers, shown in place of the Delete button. */
+.delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  animation: fade-in 0.15s ease-out;
+}
+
+.delete-question {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+/* "Yes, delete" is filled red: this is the real, final delete. */
+.delete-button-confirm {
+  color: var(--color-on-primary);
+  background-color: var(--color-danger);
+}
+
+/* "Cancel" is a quiet grey button, the same size as the delete buttons. */
+.cancel-button {
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  border-color: var(--color-text-muted);
+}
