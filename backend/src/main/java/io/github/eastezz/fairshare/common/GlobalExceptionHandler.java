@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import io.github.eastezz.fairshare.auth.EmailAlreadyRegisteredException;
+import io.github.eastezz.fairshare.auth.InvalidPasswordException;
 import io.github.eastezz.fairshare.expense.ExpenseNotFoundException;
 import io.github.eastezz.fairshare.expense.InvalidExpenseException;
 import io.github.eastezz.fairshare.group.GroupNotFoundException;
@@ -61,6 +63,22 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleInvalidPayment(InvalidPaymentException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
 		problem.setTitle("Invalid payment");
+		return problem;
+	}
+
+	/** Email already has an account: 409 Conflict. */
+	@ExceptionHandler(EmailAlreadyRegisteredException.class)
+	public ProblemDetail handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+		problem.setTitle("Conflict");
+		return problem;
+	}
+
+	/** Password that can't be used (for example too long for BCrypt): 400 Bad Request. */
+	@ExceptionHandler(InvalidPasswordException.class)
+	public ProblemDetail handleInvalidPassword(InvalidPasswordException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+		problem.setTitle("Invalid password");
 		return problem;
 	}
 
