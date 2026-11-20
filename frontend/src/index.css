@@ -3,8 +3,25 @@
 :root {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
-  color: #1f2328;
-  background-color: #f6f8fa;
+
+  /* Design tokens: every color of the app has a name here, and the CSS files use only these names.
+     The dark theme will later just give the same names other values. */
+  --color-bg: #f6f8fa;            /* page background */
+  --color-surface: #ffffff;       /* boxes, lists and inputs */
+  --color-text: #1f2328;          /* normal text */
+  --color-text-muted: #59636e;    /* less important text, like "paid by Anna" */
+  --color-border: #d0d7de;        /* lines around boxes and inputs */
+  --color-primary: #1f6feb;       /* main buttons */
+  --color-primary-hover: #1858c4; /* main buttons under the mouse */
+  --color-on-primary: #ffffff;    /* text on main and danger buttons */
+  --color-disabled: #8c959f;      /* buttons that can't be clicked */
+  --color-danger: #cf222e;        /* errors, delete, negative balances */
+  --color-success: #1a7f37;       /* positive balances, "settled up" */
+  --color-success-bg: #dafbe1;    /* background of the "settled up" box */
+  --color-success-border: #aceebb;
+
+  color: var(--color-text);
+  background-color: var(--color-bg);
 }
 
 body {

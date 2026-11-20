@@ -7,9 +7,9 @@
   list-style: none;
   margin: 0 0 1rem;
   padding: 0;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
 }
 
 /* Each row: text on the left, the amount (and the button) pushed to the right. */
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .balance-list li:last-child,
@@ -45,7 +45,7 @@
 
 .balance-wording,
 .payment-date {
-  color: #59636e;
+  color: var(--color-text-muted);
 }
 
 /* margin-left: auto takes all free space on its left, so the amount moves to the right edge.
@@ -60,16 +60,16 @@
 
 /* Green: the group owes this member money. Red: this member owes money. */
 .balance-positive .balance-amount {
-  color: #1a7f37;
+  color: var(--color-success);
 }
 
 .balance-negative .balance-amount {
-  color: #cf222e;
+  color: var(--color-danger);
 }
 
 /* Exactly 0: grey, because there is nothing to do. */
 .balance-zero .balance-amount {
-  color: #59636e;
+  color: var(--color-text-muted);
 }
 
 /* A small blue button, the same blue as the main buttons on the group page. */
@@ -77,23 +77,23 @@
   padding: 0.2rem 0.6rem;
   font: inherit;
   font-size: 0.85rem;
-  color: #ffffff;
-  background-color: #1f6feb;
+  color: var(--color-on-primary);
+  background-color: var(--color-primary);
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .pay-button:hover {
-  background-color: #1858c4;
+  background-color: var(--color-primary-hover);
 }
 
 /* The "everyone is settled up" message is a light green box. */
 .settled {
   padding: 0.75rem 1rem;
-  color: #1a7f37;
+  color: var(--color-success);
   font-weight: 600;
-  background-color: #dafbe1;
-  border: 1px solid #aceebb;
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   border-radius: 8px;
 }
