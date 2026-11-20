@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { createGroup, listGroups, type Group } from './api'
 import './GroupsPage.css'
 import LoadingCard from './LoadingCard'
+import { useToast } from './toast'
 
 /** The start page: loads all groups from the backend and lists them. */
 function GroupsPage() {
@@ -16,6 +17,7 @@ function GroupsPage() {
   const [name, setName] = useState('')
   // The error from the last "Create group" attempt, or null.
   const [createError, setCreateError] = useState<string | null>(null)
+  const showToast = useToast()
 
   // Runs once, after the page first appears on screen.
   useEffect(() => {
@@ -39,6 +41,7 @@ function GroupsPage() {
       const created = await createGroup(name.trim())
       setGroups([...groups, created])
       setName('')
+      showToast(`Group "${created.name}" created`)
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Unknown error')
     }

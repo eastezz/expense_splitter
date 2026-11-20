@@ -15,6 +15,7 @@ import { parseGroupId } from './groupId'
 import { formatCents } from './money'
 import './BalancesPage.css'
 import LoadingCard from './LoadingCard'
+import { useToast } from './toast'
 
 /** Shows the sign of a balance: 5000 -> "+50,00 €", -1000 -> "-10,00 €", 0 -> "0,00 €". */
 function formatSignedCents(cents: number): string {
@@ -78,6 +79,7 @@ function BalancesPage() {
   const [error, setError] = useState<string | null>(null)
   // The error from the last "Mark as paid" click, or null.
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const showToast = useToast()
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -119,6 +121,7 @@ function BalancesPage() {
       setBalances(newBalances)
       setTransfers(newTransfers)
       setPayments(newPayments)
+      showToast(`${transfer.fromMemberName} paid ${transfer.toMemberName} ${formatCents(transfer.amountCents)}`)
     } catch (err) {
       setPaymentError(err instanceof Error ? err.message : 'Unknown error')
     }

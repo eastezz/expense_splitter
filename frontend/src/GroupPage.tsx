@@ -16,6 +16,7 @@ import { parseGroupId } from './groupId'
 import { formatCents, parseEuroToCents } from './money'
 import './GroupPage.css'
 import LoadingCard from './LoadingCard'
+import { useToast } from './toast'
 
 /** The page of one group, at /groups/:groupId. Loads the group and shows its name. */
 function GroupPage() {
@@ -51,6 +52,7 @@ function GroupPage() {
   const [expenseError, setExpenseError] = useState<string | null>(null)
   // The error from the last "Delete" click, or null.
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const showToast = useToast()
 
   // Runs when the page appears, and again if the id in the URL changes.
   useEffect(() => {
@@ -87,6 +89,7 @@ function GroupPage() {
       // adds two members quickly, `members` here could still be the list from before the first.
       setMembers((current) => [...current, created])
       setMemberName('')
+      showToast(`${created.name} added`)
     } catch (err) {
       setMemberError(err instanceof Error ? err.message : 'Unknown error')
     }
@@ -157,6 +160,7 @@ function GroupPage() {
       setExcludedIds([])
       setSplitType('EQUAL')
       setExactAmounts({})
+      showToast(`Expense "${created.description}" added`)
     } catch (err) {
       setExpenseError(err instanceof Error ? err.message : 'Unknown error')
     }
@@ -171,6 +175,7 @@ function GroupPage() {
     try {
       await deleteExpense(group.id, expenseId)
       setExpenses((current) => current.filter((expense) => expense.id !== expenseId))
+      showToast('Expense deleted')
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Unknown error')
     }

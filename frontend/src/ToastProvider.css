@@ -1,0 +1,55 @@
+/* Styles for the short messages ("toasts") at the bottom of the screen. */
+
+/* Fixed at the bottom center, above everything else. Clicks go through the empty space. */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* One message: a rounded "pill" that slides up a little when it appears. */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+  animation: toast-in 0.2s ease-out;
+}
+
+/* The green circle with the check mark. */
+.toast-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.8rem;
+  color: var(--color-on-primary);
+  background-color: var(--color-success);
+  border-radius: 50%;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
