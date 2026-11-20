@@ -1,0 +1,44 @@
+/* Styles for the colored circles with a member's first letter. */
+
+.avatar {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  border-radius: 50%;
+}
+
+/* The letter comes from data-initial. Drawn by CSS, it is not part of the row's text,
+   so the row still reads just "Anna" (for screen readers and for the tests). */
+.avatar::before {
+  content: attr(data-initial);
+}
+
+/* Six colors that are readable with white text in both the light and the dark theme. */
+.avatar-color-0 {
+  background-color: #1f6feb;
+}
+
+.avatar-color-1 {
+  background-color: #8250df;
+}
+
+.avatar-color-2 {
+  background-color: #bf3989;
+}
+
+.avatar-color-3 {
+  background-color: #bc4c00;
+}
+
+.avatar-color-4 {
+  background-color: #1a7f37;
+}
+
+.avatar-color-5 {
+  background-color: #0e7490;
+}

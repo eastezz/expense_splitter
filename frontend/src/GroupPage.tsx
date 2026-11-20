@@ -15,6 +15,7 @@ import {
 import { parseGroupId } from './groupId'
 import { formatCents, parseEuroToCents } from './money'
 import './GroupPage.css'
+import Avatar from './Avatar'
 import LoadingCard from './LoadingCard'
 import { useToast } from './toast'
 
@@ -207,7 +208,10 @@ function GroupPage() {
           {members.length === 0 && <p>No members yet.</p>}
           <ul className="member-list">
             {members.map((member) => (
-              <li key={member.id}>{member.name}</li>
+              <li key={member.id}>
+                <Avatar name={member.name} />
+                {member.name}
+              </li>
             ))}
           </ul>
           <form

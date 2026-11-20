@@ -14,6 +14,7 @@ import {
 import { parseGroupId } from './groupId'
 import { formatCents } from './money'
 import './BalancesPage.css'
+import Avatar from './Avatar'
 import LoadingCard from './LoadingCard'
 import { useToast } from './toast'
 
@@ -142,6 +143,7 @@ function BalancesPage() {
           <ul className="balance-list">
             {balances.map((balance) => (
               <li key={balance.memberId} className={balanceClass(balance.balanceCents)}>
+                <Avatar name={balance.memberName} />
                 <span className="balance-name">{balance.memberName}</span>{' '}
                 <span className="balance-wording">{balanceWording(balance.balanceCents)}</span>{' '}
                 <span className="balance-amount">{formatSignedCents(balance.balanceCents)}</span>
