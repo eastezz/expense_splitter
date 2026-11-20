@@ -8,7 +8,9 @@ A full-stack web app for splitting group expenses, inspired by apps like Settle 
 
 | A group with its members and expenses | Balances and suggested transfers |
 |---|---|
-| ![Group page with the members Anna, Ben and Cem and two expenses](assets/web-group.png) | ![Balances page: Anna +50, Ben -10, Cem -40, and two transfers to settle up](assets/web-balances.png) |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/web-group-dark.png"><img alt="Group page with the members Anna, Ben and Cem and two expenses" src="assets/web-group.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="assets/web-balances-dark.png"><img alt="Balances page: Anna +50, Ben -10, Cem -40, and two transfers to settle up" src="assets/web-balances.png"></picture> |
+
+The app has a light and a dark theme: it follows the setting of your phone or computer, and the button in the top right switches it by hand. A short message confirms every action, deleting an expense asks first, and the pages fade in with grey placeholders while data is loading.
 
 ## Run it
 
@@ -116,7 +118,7 @@ cd frontend
 npm test
 ```
 
-The 18 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances and the error messages.
+The 26 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances and the error messages.
 
 GitHub Actions runs three jobs on every push to `main` and on every pull request: the backend tests, the frontend lint, tests and build, and a Docker build of both images.
 
