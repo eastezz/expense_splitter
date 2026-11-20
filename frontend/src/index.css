@@ -4,9 +4,9 @@
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
 
-  /* Tells the browser that the app supports both themes, so its own parts (inputs, checkboxes,
-     dropdowns, scrollbars) also switch to dark. */
-  color-scheme: light dark;
+  /* Tells the browser which theme is active, so its own parts (inputs, checkboxes,
+     dropdowns, scrollbars) use matching colors. */
+  color-scheme: light;
 
   /* Design tokens: every color of the app has a name here, and the CSS files use only these names.
      The dark theme will later just give the same names other values. */
@@ -29,25 +29,25 @@
   background-color: var(--color-bg);
 }
 
-/* Dark theme: the same tokens with dark values. The browser uses it automatically
-   when the phone or computer is set to dark mode. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0d1117;
-    --color-surface: #161b22;
-    --color-text: #e6edf3;
-    --color-text-muted: #9198a1;
-    --color-border: #3d444d;
-    --color-primary: #2f81f7;
-    --color-primary-hover: #4c94f8;
-    --color-on-primary: #ffffff;
-    --color-disabled: #656c76;
-    --color-danger: #f85149;
-    --color-success: #3fb950;
-    --color-success-bg: #12261e;
-    --color-success-border: #2ea04366;
-    --color-link: #4493f8;
-  }
+/* Dark theme: the same tokens with dark values. It is active when <html> has data-theme="dark".
+   The script in index.html sets that before the page is drawn: the saved choice of the
+   theme button, or else the setting of the phone or computer. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-text: #e6edf3;
+  --color-text-muted: #9198a1;
+  --color-border: #3d444d;
+  --color-primary: #2f81f7;
+  --color-primary-hover: #4c94f8;
+  --color-on-primary: #ffffff;
+  --color-disabled: #656c76;
+  --color-danger: #f85149;
+  --color-success: #3fb950;
+  --color-success-bg: #12261e;
+  --color-success-border: #2ea04366;
+  --color-link: #4493f8;
 }
 
 a {

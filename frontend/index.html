@@ -1,10 +1,21 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>expense_splitter</title>
+    <script>
+      // Picks the theme before the page is drawn, so it never flashes in the wrong colors.
+      // The choice saved by the theme button wins; otherwise follow the phone or computer setting.
+      try {
+        const saved = localStorage.getItem('theme')
+        const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch {
+        // localStorage can be blocked (for example in private mode); then the light theme is used.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
