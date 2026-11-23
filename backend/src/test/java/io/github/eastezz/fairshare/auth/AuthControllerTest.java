@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.auth;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,13 +39,13 @@ class AuthControllerTest {
 	private PasswordEncoder passwordEncoder;
 
 	private ResultActions register(String email, String password) throws Exception {
-		return mockMvc.perform(post("/api/auth/register")
+		return mockMvc.perform(post("/api/auth/register").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
 	}
 
 	private ResultActions login(String email, String password) throws Exception {
-		return mockMvc.perform(post("/api/auth/login")
+		return mockMvc.perform(post("/api/auth/login").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
 	}
@@ -96,7 +97,7 @@ class AuthControllerTest {
 		register("greta@example.de", "secret123").andExpect(status().isCreated());
 		MockHttpSession session = loginAndGetSession("greta@example.de", "secret123");
 
-		mockMvc.perform(post("/api/auth/logout").session(session)).andExpect(status().isNoContent());
+		mockMvc.perform(post("/api/auth/logout").session(session).with(csrf())).andExpect(status().isNoContent());
 
 		assertThat(session.isInvalid()).isTrue();
 		mockMvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());

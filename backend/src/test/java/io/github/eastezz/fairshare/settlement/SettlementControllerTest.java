@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.settlement;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +22,8 @@ import io.github.eastezz.fairshare.member.MemberRepository;
 
 /** Tests GET /api/groups/{groupId}/settlements with the whole application running against H2. */
 @SpringBootTest
+// Every request in this class runs as a logged-in user (the API needs a login).
+@WithMockUser(username = "anna@example.de")
 @AutoConfigureMockMvc
 class SettlementControllerTest {
 
@@ -56,7 +60,7 @@ class SettlementControllerTest {
 				{"description":"%s","amountCents":%d,"paidByMemberId":%d,"splitType":"EQUAL",
 				 "shares":[{"memberId":%d},{"memberId":%d},{"memberId":%d}]}
 				""".formatted(description, amountCents, paidBy, anna, ben, cem);
-		mockMvc.perform(post("/api/groups/" + groupId + "/expenses")
+		mockMvc.perform(post("/api/groups/" + groupId + "/expenses").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(json)).andExpect(status().isCreated());
 	}

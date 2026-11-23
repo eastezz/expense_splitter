@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.group;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,12 +13,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Tests the /api/groups endpoints with the whole application running against H2. */
 @SpringBootTest
+// Every request in this class runs as a logged-in user (the API needs a login).
+@WithMockUser(username = "anna@example.de")
 @AutoConfigureMockMvc
 class GroupControllerTest {
 
@@ -29,7 +33,7 @@ class GroupControllerTest {
 
 	@Test
 	void createReturns201WithLocation() throws Exception {
-		mockMvc.perform(post("/api/groups")
+		mockMvc.perform(post("/api/groups").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"Trip to Berlin\"}"))
 			.andExpect(status().isCreated())
@@ -69,7 +73,7 @@ class GroupControllerTest {
 
 	@Test
 	void blankNameReturns400WithFieldError() throws Exception {
-		mockMvc.perform(post("/api/groups")
+		mockMvc.perform(post("/api/groups").with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"  \"}"))
 			.andExpect(status().isBadRequest())

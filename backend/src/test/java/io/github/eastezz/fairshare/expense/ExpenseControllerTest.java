@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.expense;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,6 +29,8 @@ import io.github.eastezz.fairshare.member.MemberRepository;
 
 /** Tests the /api/groups/{groupId}/expenses endpoints with the whole application running against H2. */
 @SpringBootTest
+// Every request in this class runs as a logged-in user (the API needs a login).
+@WithMockUser(username = "anna@example.de")
 @AutoConfigureMockMvc
 class ExpenseControllerTest {
 
@@ -62,7 +66,7 @@ class ExpenseControllerTest {
 	}
 
 	private ResultActions postExpense(Long groupId, String json) throws Exception {
-		return mockMvc.perform(post("/api/groups/" + groupId + "/expenses")
+		return mockMvc.perform(post("/api/groups/" + groupId + "/expenses").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(json));
 	}
@@ -216,7 +220,7 @@ class ExpenseControllerTest {
 	void deleteReturns204AndRemovesExpenseWithShares() throws Exception {
 		long expenseId = createDinner();
 
-		mockMvc.perform(delete("/api/groups/" + groupId + "/expenses/" + expenseId))
+		mockMvc.perform(delete("/api/groups/" + groupId + "/expenses/" + expenseId).with(csrf()))
 			.andExpect(status().isNoContent());
 
 		mockMvc.perform(get("/api/groups/" + groupId + "/expenses/" + expenseId))

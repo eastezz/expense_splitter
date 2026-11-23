@@ -14,21 +14,45 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 
 /**
- * The security rules of the app (Spring Security).
- * For now every request is still allowed; the next piece requires a login for the API.
+ * The security rules of the app (Spring Security):
+ * the API needs a login (except health check and the account endpoints),
+ * and every request that changes data needs the CSRF token.
  */
 @Configuration
 public class SecurityConfig {
+
+	/** The answer for a request to the API without login: 401 with the same JSON format as our other errors. */
+	private static final String NOT_LOGGED_IN_JSON =
+			"{\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"Not logged in\"}";
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository)
 			throws Exception {
 		http
-			.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-			// CSRF protection is switched on in the next piece, together with locking the API.
-			.csrf(csrf -> csrf.disable())
+			.authorizeHttpRequests(auth -> auth
+				// Open to everyone: the health check and register, login, logout, "who am I".
+				.requestMatchers("/api/health", "/api/auth/**").permitAll()
+				// All other API endpoints (groups, members, expenses, …) only after login.
+				.requestMatchers("/api/**").authenticated()
+				// Everything else (Swagger UI, API docs, H2 console in development) stays open.
+				.anyRequest().permitAll())
+			// CSRF protection for a single-page app: the token goes into the cookie XSRF-TOKEN,
+			// and the React app sends it back in the header X-XSRF-TOKEN (see withCsrf in api.ts).
+			// The H2 console is a development tool with its own forms, so it is left out.
+			.csrf(csrf -> csrf.spa().ignoringRequestMatchers("/h2-console/**"))
+			// Puts the CSRF token into the cookie on every answer, so it is there before the first POST.
+			.addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
+			// The H2 console shows itself in frames; allow that only from our own site.
+			.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+			// Without login: 401 with a JSON message instead of Spring's default login form.
+			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, ex) -> {
+				response.setStatus(HttpStatus.UNAUTHORIZED.value());
+				response.setContentType("application/problem+json");
+				response.getWriter().write(NOT_LOGGED_IN_JSON);
+			}))
 			// Reads the login of each request from the same place where AuthController saves it.
 			.securityContext(context -> context.securityContextRepository(securityContextRepository))
 			// POST /api/auth/logout ends the session, deletes the cookie and answers 204 No Content.

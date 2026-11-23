@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.member;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +23,8 @@ import io.github.eastezz.fairshare.group.GroupRepository;
 
 /** Tests the /api/groups/{groupId}/members endpoints with the whole application running against H2. */
 @SpringBootTest
+// Every request in this class runs as a logged-in user (the API needs a login).
+@WithMockUser(username = "anna@example.de")
 @AutoConfigureMockMvc
 class MemberControllerTest {
 
@@ -39,7 +43,7 @@ class MemberControllerTest {
 	}
 
 	private ResultActions addMember(Long groupId, String name) throws Exception {
-		return mockMvc.perform(post("/api/groups/" + groupId + "/members")
+		return mockMvc.perform(post("/api/groups/" + groupId + "/members").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"name\":\"" + name + "\"}"));
 	}
