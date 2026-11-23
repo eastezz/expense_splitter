@@ -105,15 +105,16 @@ class AuthControllerTest {
 
 	@Test
 	void registerReturns201AndStoresOnlyAHash() throws Exception {
-		register("Anna@Example.de", "secret123")
+		// Its own email: other test classes create "anna@example.de" as their logged-in test user.
+		register("Ida@Example.de", "secret123")
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").isNumber())
-			.andExpect(jsonPath("$.email").value("anna@example.de"))
+			.andExpect(jsonPath("$.email").value("ida@example.de"))
 			// The answer must never contain the password or its hash.
 			.andExpect(jsonPath("$.password").doesNotExist())
 			.andExpect(jsonPath("$.passwordHash").doesNotExist());
 
-		UserAccount saved = userAccountRepository.findByEmail("anna@example.de").orElseThrow();
+		UserAccount saved = userAccountRepository.findByEmail("ida@example.de").orElseThrow();
 		assertThat(saved.getPasswordHash()).isNotEqualTo("secret123").startsWith("$2").hasSize(60);
 		assertThat(passwordEncoder.matches("secret123", saved.getPasswordHash())).isTrue();
 	}
