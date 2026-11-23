@@ -30,6 +30,26 @@ it('logs in and goes to the start page', async () => {
   expect(fetchMock).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({ method: 'POST' }))
 })
 
+it('goes back to the page the user wanted before the login', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ id: 1, email: 'anna@example.de' })))
+  const user = userEvent.setup()
+  // RequireLogin sends the user here with the wanted address in the "state".
+  render(
+    <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: '/groups/3' } }]}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/groups/:groupId" element={<p>Group page</p>} />
+      </Routes>
+    </MemoryRouter>,
+  )
+
+  await user.type(screen.getByLabelText('Email'), 'anna@example.de')
+  await user.type(screen.getByLabelText('Password'), 'secret123')
+  await user.click(screen.getByRole('button', { name: 'Log in' }))
+
+  expect(await screen.findByText('Group page')).toBeInTheDocument()
+})
+
 it('shows the error and stays on the page when the login fails', async () => {
   vi.stubGlobal(
     'fetch',

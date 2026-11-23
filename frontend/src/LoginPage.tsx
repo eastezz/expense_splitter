@@ -1,13 +1,21 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { login } from './api'
+import { useAuth } from './auth'
 import './AuthPage.css'
 import { useToast } from './toast'
 
-/** The page at /login: email and password, then on to the start page. */
+/**
+ * The page at /login: email and password, then back to the page the user wanted
+ * (RequireLogin remembers it), or else to the start page.
+ */
 function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { setUser } = useAuth()
   const showToast = useToast()
+  // The address RequireLogin sent us away from, for example "/groups/3".
+  const from = (location.state as { from?: string } | null)?.from ?? '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   // The error from the last attempt (for example "Wrong email or password"), or null.
@@ -20,8 +28,9 @@ function LoginPage() {
     setBusy(true)
     try {
       const user = await login(email.trim(), password)
+      setUser(user)
       showToast(`Logged in as ${user.email}`)
-      navigate('/')
+      navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
       setBusy(false)

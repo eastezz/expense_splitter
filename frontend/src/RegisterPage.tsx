@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { login, register } from './api'
+import { useAuth } from './auth'
 import './AuthPage.css'
 import { useToast } from './toast'
 
@@ -10,6 +11,7 @@ const MIN_PASSWORD_LENGTH = 8
 /** The page at /register: creates an account and logs in with it right away. */
 function RegisterPage() {
   const navigate = useNavigate()
+  const { setUser } = useAuth()
   const showToast = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,6 +32,7 @@ function RegisterPage() {
       await register(email.trim(), password)
       // Nobody wants to type the same password again right after choosing it.
       const user = await login(email.trim(), password)
+      setUser(user)
       showToast(`Account created for ${user.email}`)
       navigate('/')
     } catch (err) {
