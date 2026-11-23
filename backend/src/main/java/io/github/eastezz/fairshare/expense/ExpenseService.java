@@ -11,8 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.eastezz.fairshare.group.Group;
-import io.github.eastezz.fairshare.group.GroupNotFoundException;
-import io.github.eastezz.fairshare.group.GroupRepository;
+import io.github.eastezz.fairshare.group.GroupAccess;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
 
@@ -27,23 +26,23 @@ public class ExpenseService {
 
 	private final ExpenseRepository expenseRepository;
 
-	private final GroupRepository groupRepository;
+	private final GroupAccess groupAccess;
 
 	private final MemberRepository memberRepository;
 
 	private final SplitCalculator splitCalculator;
 
-	public ExpenseService(ExpenseRepository expenseRepository, GroupRepository groupRepository,
+	public ExpenseService(ExpenseRepository expenseRepository, GroupAccess groupAccess,
 			MemberRepository memberRepository, SplitCalculator splitCalculator) {
 		this.expenseRepository = expenseRepository;
-		this.groupRepository = groupRepository;
+		this.groupAccess = groupAccess;
 		this.memberRepository = memberRepository;
 		this.splitCalculator = splitCalculator;
 	}
 
 	/** Creates an expense in a group. 404 if the group is unknown, 400 if the expense is invalid. */
 	public ExpenseResponse create(Long groupId, CreateExpenseRequest request) {
-		Group group = groupRepository.findById(groupId).orElseThrow(() -> new GroupNotFoundException(groupId));
+		Group group = groupAccess.requireOwnGroup(groupId);
 		Member payer = findMemberOfGroup(groupId, request.paidByMemberId());
 
 		Map<Long, Member> members = new HashMap<>();
@@ -66,9 +65,7 @@ public class ExpenseService {
 	/** Lists the expenses of a group in the order they were added. 404 if the group is unknown. */
 	@Transactional(readOnly = true)
 	public List<ExpenseResponse> findByGroup(Long groupId) {
-		if (!groupRepository.existsById(groupId)) {
-			throw new GroupNotFoundException(groupId);
-		}
+		groupAccess.requireOwnGroup(groupId);
 		return expenseRepository.findByGroupIdOrderByIdAsc(groupId).stream().map(ExpenseResponse::from).toList();
 	}
 
@@ -84,6 +81,8 @@ public class ExpenseService {
 	}
 
 	private Expense findExpenseOfGroup(Long groupId, Long expenseId) {
+		// First the group: someone else's group gives 404 before we even look for the expense.
+		groupAccess.requireOwnGroup(groupId);
 		return expenseRepository.findByIdAndGroupId(expenseId, groupId)
 			.orElseThrow(() -> new ExpenseNotFoundException(groupId, expenseId));
 	}

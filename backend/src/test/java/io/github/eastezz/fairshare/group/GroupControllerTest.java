@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import io.github.eastezz.fairshare.TestUsers;
+import io.github.eastezz.fairshare.user.UserAccount;
 import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /** Tests the /api/groups endpoints with the whole application running against H2. */
@@ -38,6 +39,11 @@ class GroupControllerTest {
 
 	@Autowired
 	private UserAccountRepository userAccountRepository;
+
+	/** The logged-in test user's account (see @WithMockUser); the test groups belong to it. */
+	private UserAccount anna() {
+		return TestUsers.ensure(userAccountRepository, TestUsers.ANNA);
+	}
 
 	/** The logged-in test user must exist as an account, because a new group gets it as owner. */
 	@BeforeEach
@@ -74,7 +80,7 @@ class GroupControllerTest {
 
 	@Test
 	void listContainsSavedGroup() throws Exception {
-		groupRepository.save(new Group("Flat 3B"));
+		groupRepository.save(new Group("Flat 3B", anna()));
 
 		mockMvc.perform(get("/api/groups"))
 			.andExpect(status().isOk())
@@ -83,7 +89,7 @@ class GroupControllerTest {
 
 	@Test
 	void getReturnsGroupById() throws Exception {
-		Group saved = groupRepository.save(new Group("Ski weekend"));
+		Group saved = groupRepository.save(new Group("Ski weekend", anna()));
 
 		mockMvc.perform(get("/api/groups/" + saved.getId()))
 			.andExpect(status().isOk())

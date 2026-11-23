@@ -10,8 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.eastezz.fairshare.expense.Expense;
 import io.github.eastezz.fairshare.expense.ExpenseRepository;
 import io.github.eastezz.fairshare.expense.ExpenseShare;
-import io.github.eastezz.fairshare.group.GroupNotFoundException;
-import io.github.eastezz.fairshare.group.GroupRepository;
+import io.github.eastezz.fairshare.group.GroupAccess;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
 import io.github.eastezz.fairshare.payment.PaymentRepository;
@@ -25,7 +24,7 @@ import io.github.eastezz.fairshare.payment.PaymentRepository;
 @Transactional(readOnly = true)
 public class BalanceService {
 
-	private final GroupRepository groupRepository;
+	private final GroupAccess groupAccess;
 
 	private final MemberRepository memberRepository;
 
@@ -35,10 +34,10 @@ public class BalanceService {
 
 	private final BalanceCalculator balanceCalculator;
 
-	public BalanceService(GroupRepository groupRepository, MemberRepository memberRepository,
+	public BalanceService(GroupAccess groupAccess, MemberRepository memberRepository,
 			ExpenseRepository expenseRepository, PaymentRepository paymentRepository,
 			BalanceCalculator balanceCalculator) {
-		this.groupRepository = groupRepository;
+		this.groupAccess = groupAccess;
 		this.memberRepository = memberRepository;
 		this.expenseRepository = expenseRepository;
 		this.paymentRepository = paymentRepository;
@@ -47,9 +46,7 @@ public class BalanceService {
 
 	/** The balance of every member of the group, ordered by member id. 404 if the group is unknown. */
 	public List<BalanceResponse> getBalances(Long groupId) {
-		if (!groupRepository.existsById(groupId)) {
-			throw new GroupNotFoundException(groupId);
-		}
+		groupAccess.requireOwnGroup(groupId);
 		List<Member> members = memberRepository.findByGroupIdOrderByIdAsc(groupId);
 		// One query that also loads the shares and their members (@EntityGraph).
 		List<ExpenseEntry> expenses = expenseRepository.findByGroupIdOrderByIdAsc(groupId)

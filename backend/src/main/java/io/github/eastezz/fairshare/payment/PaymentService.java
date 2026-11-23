@@ -6,8 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.eastezz.fairshare.group.Group;
-import io.github.eastezz.fairshare.group.GroupNotFoundException;
-import io.github.eastezz.fairshare.group.GroupRepository;
+import io.github.eastezz.fairshare.group.GroupAccess;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
 
@@ -21,20 +20,20 @@ public class PaymentService {
 
 	private final PaymentRepository paymentRepository;
 
-	private final GroupRepository groupRepository;
+	private final GroupAccess groupAccess;
 
 	private final MemberRepository memberRepository;
 
-	public PaymentService(PaymentRepository paymentRepository, GroupRepository groupRepository,
+	public PaymentService(PaymentRepository paymentRepository, GroupAccess groupAccess,
 			MemberRepository memberRepository) {
 		this.paymentRepository = paymentRepository;
-		this.groupRepository = groupRepository;
+		this.groupAccess = groupAccess;
 		this.memberRepository = memberRepository;
 	}
 
 	/** Records a payment in a group. 404 if the group is unknown, 400 if the payment is invalid. */
 	public PaymentResponse create(Long groupId, CreatePaymentRequest request) {
-		Group group = groupRepository.findById(groupId).orElseThrow(() -> new GroupNotFoundException(groupId));
+		Group group = groupAccess.requireOwnGroup(groupId);
 		if (request.fromMemberId().equals(request.toMemberId())) {
 			throw new InvalidPaymentException("A member cannot pay themselves");
 		}
@@ -46,9 +45,7 @@ public class PaymentService {
 	/** Lists the payments of a group in the order they were made. 404 if the group is unknown. */
 	@Transactional(readOnly = true)
 	public List<PaymentResponse> findByGroup(Long groupId) {
-		if (!groupRepository.existsById(groupId)) {
-			throw new GroupNotFoundException(groupId);
-		}
+		groupAccess.requireOwnGroup(groupId);
 		return paymentRepository.findByGroupIdOrderByIdAsc(groupId).stream().map(PaymentResponse::from).toList();
 	}
 

@@ -30,16 +30,18 @@ public class GroupService {
 		return GroupResponse.from(saved);
 	}
 
-	/** Returns all groups. */
+	/** Returns the groups of the logged-in user, oldest first. */
 	@Transactional(readOnly = true)
 	public List<GroupResponse> findAll() {
-		return groupRepository.findAll().stream().map(GroupResponse::from).toList();
+		Long ownerId = currentUser.require().getId();
+		return groupRepository.findByOwnerIdOrderByIdAsc(ownerId).stream().map(GroupResponse::from).toList();
 	}
 
-	/** Returns one group, or throws GroupNotFoundException (404) if the id does not exist. */
+	/** Returns one group of the logged-in user; 404 if it doesn't exist or belongs to someone else. */
 	@Transactional(readOnly = true)
 	public GroupResponse findById(Long id) {
-		return groupRepository.findById(id)
+		Long ownerId = currentUser.require().getId();
+		return groupRepository.findByIdAndOwnerId(id, ownerId)
 			.map(GroupResponse::from)
 			.orElseThrow(() -> new GroupNotFoundException(id));
 	}

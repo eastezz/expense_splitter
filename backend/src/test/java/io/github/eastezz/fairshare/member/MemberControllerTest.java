@@ -20,6 +20,9 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import io.github.eastezz.fairshare.group.Group;
 import io.github.eastezz.fairshare.group.GroupRepository;
+import io.github.eastezz.fairshare.TestUsers;
+import io.github.eastezz.fairshare.user.UserAccount;
+import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /** Tests the /api/groups/{groupId}/members endpoints with the whole application running against H2. */
 @SpringBootTest
@@ -32,6 +35,14 @@ class MemberControllerTest {
 	private MockMvc mockMvc;
 
 	@Autowired
+	private UserAccountRepository userAccountRepository;
+
+	/** The logged-in test user's account (see @WithMockUser); the test groups belong to it. */
+	private UserAccount anna() {
+		return TestUsers.ensure(userAccountRepository, TestUsers.ANNA);
+	}
+
+	@Autowired
 	private GroupRepository groupRepository;
 
 	private Long groupId;
@@ -39,7 +50,7 @@ class MemberControllerTest {
 	/** Every test gets its own fresh group, so tests don't see each other's members. */
 	@BeforeEach
 	void createGroup() {
-		groupId = groupRepository.save(new Group("Trip to Berlin")).getId();
+		groupId = groupRepository.save(new Group("Trip to Berlin", anna())).getId();
 	}
 
 	private ResultActions addMember(Long groupId, String name) throws Exception {
@@ -94,7 +105,7 @@ class MemberControllerTest {
 
 	@Test
 	void sameNameInOtherGroupIsAllowed() throws Exception {
-		Long otherGroupId = groupRepository.save(new Group("Flat 3B")).getId();
+		Long otherGroupId = groupRepository.save(new Group("Flat 3B", anna())).getId();
 		addMember(groupId, "Anna").andExpect(status().isCreated());
 
 		addMember(otherGroupId, "Anna").andExpect(status().isCreated());

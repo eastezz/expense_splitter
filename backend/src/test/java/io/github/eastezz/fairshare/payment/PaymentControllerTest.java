@@ -26,6 +26,9 @@ import io.github.eastezz.fairshare.group.Group;
 import io.github.eastezz.fairshare.group.GroupRepository;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
+import io.github.eastezz.fairshare.TestUsers;
+import io.github.eastezz.fairshare.user.UserAccount;
+import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /** Tests the /api/groups/{groupId}/payments endpoints with the whole application running against H2. */
 @SpringBootTest
@@ -36,6 +39,14 @@ class PaymentControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private UserAccountRepository userAccountRepository;
+
+	/** The logged-in test user's account (see @WithMockUser); the test groups belong to it. */
+	private UserAccount anna() {
+		return TestUsers.ensure(userAccountRepository, TestUsers.ANNA);
+	}
 
 	@Autowired
 	private GroupRepository groupRepository;
@@ -54,7 +65,7 @@ class PaymentControllerTest {
 	/** Every test gets its own fresh group with three members (ids in the order Anna < Ben < Cem). */
 	@BeforeEach
 	void createGroupWithMembers() {
-		Group group = groupRepository.save(new Group("Trip to Berlin"));
+		Group group = groupRepository.save(new Group("Trip to Berlin", anna()));
 		groupId = group.getId();
 		anna = memberRepository.save(new Member("Anna", group)).getId();
 		ben = memberRepository.save(new Member("Ben", group)).getId();
@@ -119,7 +130,7 @@ class PaymentControllerTest {
 
 	@Test
 	void memberOfAnotherGroupReturns400() throws Exception {
-		Group other = groupRepository.save(new Group("Other group"));
+		Group other = groupRepository.save(new Group("Other group", anna()));
 		Long stranger = memberRepository.save(new Member("Dora", other)).getId();
 
 		postPayment(groupId, stranger, anna, 1000)

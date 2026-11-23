@@ -26,6 +26,9 @@ import io.github.eastezz.fairshare.group.Group;
 import io.github.eastezz.fairshare.group.GroupRepository;
 import io.github.eastezz.fairshare.member.Member;
 import io.github.eastezz.fairshare.member.MemberRepository;
+import io.github.eastezz.fairshare.TestUsers;
+import io.github.eastezz.fairshare.user.UserAccount;
+import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /** Tests the /api/groups/{groupId}/expenses endpoints with the whole application running against H2. */
 @SpringBootTest
@@ -36,6 +39,14 @@ class ExpenseControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private UserAccountRepository userAccountRepository;
+
+	/** The logged-in test user's account (see @WithMockUser); the test groups belong to it. */
+	private UserAccount anna() {
+		return TestUsers.ensure(userAccountRepository, TestUsers.ANNA);
+	}
 
 	@Autowired
 	private GroupRepository groupRepository;
@@ -58,7 +69,7 @@ class ExpenseControllerTest {
 	/** Every test gets its own fresh group with three members (ids in the order Anna < Ben < Chris). */
 	@BeforeEach
 	void createGroupWithMembers() {
-		Group group = groupRepository.save(new Group("Trip to Berlin"));
+		Group group = groupRepository.save(new Group("Trip to Berlin", anna()));
 		groupId = group.getId();
 		anna = memberRepository.save(new Member("Anna", group)).getId();
 		ben = memberRepository.save(new Member("Ben", group)).getId();
@@ -134,7 +145,7 @@ class ExpenseControllerTest {
 
 	@Test
 	void payerFromAnotherGroupReturns400() throws Exception {
-		Group otherGroup = groupRepository.save(new Group("Flat 3B"));
+		Group otherGroup = groupRepository.save(new Group("Flat 3B", anna()));
 		Long stranger = memberRepository.save(new Member("Dora", otherGroup)).getId();
 
 		postExpense(groupId, equalExpense("Dinner", 1000, stranger, anna, ben))
@@ -210,7 +221,7 @@ class ExpenseControllerTest {
 	@Test
 	void getExpenseThroughWrongGroupReturns404() throws Exception {
 		long expenseId = createDinner();
-		Long otherGroupId = groupRepository.save(new Group("Flat 3B")).getId();
+		Long otherGroupId = groupRepository.save(new Group("Flat 3B", anna())).getId();
 
 		mockMvc.perform(get("/api/groups/" + otherGroupId + "/expenses/" + expenseId))
 			.andExpect(status().isNotFound());
