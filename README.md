@@ -4,7 +4,7 @@
 
 A full-stack web app for splitting group expenses, inspired by apps like Settle Up or Splitwise. You add the people in a group and what each of them paid, and the app shows who owes how much and which transfers settle everything up.
 
-**Tech stack:** Java 21, Spring Boot 4, Spring Data JPA, PostgreSQL 17, Flyway, React 19, TypeScript, Vite, nginx, Docker Compose, GitHub Actions.
+**Tech stack:** Java 21, Spring Boot 4, Spring Security, Spring Data JPA, PostgreSQL 17, Flyway, React 19, TypeScript, Vite, nginx, Docker Compose, GitHub Actions.
 
 | A group with its members and expenses | Balances and suggested transfers |
 |---|---|
@@ -20,10 +20,21 @@ The whole app (PostgreSQL, the Spring Boot backend and the React frontend) start
 docker compose up --build
 ```
 
-Then open http://localhost:3000. The backend is also reachable directly at http://localhost:8080/swagger-ui.html. Stop everything with `docker compose down`.
+Then open http://localhost:3000 and create an account. The backend is also reachable directly at http://localhost:8080/swagger-ui.html. Stop everything with `docker compose down`.
 
 - The data is stored in the Docker volume `db-data`, so it survives `docker compose down` and a restart. `docker compose down -v` deletes it.
 - To use your own database password, copy `.env.example` to `.env` and change the values there. `.env` is ignored by Git.
+
+## Accounts and login
+
+Everyone creates their own account with an email and a password and only sees their own groups.
+
+- Passwords are stored only as BCrypt hashes (salted and deliberately slow), never as text. A password needs at least 8 characters and at most 72 bytes, because BCrypt ignores everything after 72 bytes.
+- After the login, Spring Security keeps the user in a server-side session. The browser only gets the session id, in an `HttpOnly` and `SameSite=Lax` cookie that JavaScript can't read. A new session id is created at every login (protection against session fixation).
+- Every request that changes data needs a CSRF token: the backend puts it into the `XSRF-TOKEN` cookie, and the React app sends it back in the `X-XSRF-TOKEN` header. Other websites can't read that cookie, so they can't send requests in the user's name.
+- Every endpoint under `/api` except `/api/health` and `/api/auth/**` needs a login and answers 401 without one. Another user's group answers 404, exactly like a group that doesn't exist, so nobody can find out which groups exist.
+- A wrong email and a wrong password give the same answer, so nobody can find out which emails have an account.
+- The sessions live in the backend's memory, so restarting the backend logs everybody out. The data stays.
 
 ## Example: settling a trip
 
@@ -85,13 +96,21 @@ This way the backend uses an in-memory H2 database in PostgreSQL mode, so the da
 
 ![Swagger UI of the running app with all endpoints](assets/swagger.png)
 
+Swagger UI lists every endpoint. The ones that need a login only work there after logging in through the app, and requests that change data are refused, because Swagger UI doesn't send the CSRF token; use the app (or the tests) for those.
+
 ## Endpoints
+
+Everything except `/api/health` and `/api/auth/**` needs a login, and a group can only be used by the user who created it.
 
 | Method | Path | What it does |
 |---|---|---|
 | GET | `/api/health` | Health check |
+| POST | `/api/auth/register` | Create an account (email and password) |
+| POST | `/api/auth/login` | Log in; the answer sets the session cookie |
+| POST | `/api/auth/logout` | Log out and end the session |
+| GET | `/api/auth/me` | The logged-in user, or 401 |
 | POST | `/api/groups` | Create a group |
-| GET | `/api/groups` | List all groups |
+| GET | `/api/groups` | List your groups |
 | GET | `/api/groups/{id}` | Get one group |
 | POST | `/api/groups/{groupId}/members` | Add a member to a group |
 | GET | `/api/groups/{groupId}/members` | List the members of a group |
@@ -111,14 +130,14 @@ cd backend
 .\mvnw.cmd verify
 ```
 
-The 67 backend tests check the split rounding, the balances, the settle-up (including a property test over 500 random groups), every endpoint with MockMvc including the error cases, and an end-to-end test that pays all suggested transfers and ends with every balance at 0.
+The 95 backend tests check the split rounding, the balances, the settle-up (including a property test over 500 random groups), every endpoint with MockMvc including the error cases, and an end-to-end test that pays all suggested transfers and ends with every balance at 0. They also check the security rules: registration and BCrypt hashing, login, logout, 401 without login, 403 without CSRF token, and that another user's group answers 404 on every endpoint.
 
 ```powershell
 cd frontend
 npm test
 ```
 
-The 26 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances and the error messages.
+The 41 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances, the error messages, the login and register forms, and that a visitor who isn't logged in is sent to the login page.
 
 GitHub Actions runs three jobs on every push to `main` and on every pull request: the backend tests, the frontend lint, tests and build, and a Docker build of both images.
 
@@ -128,4 +147,8 @@ GitHub Actions runs three jobs on every push to `main` and on every pull request
 - [x] Tests and a GitHub Actions workflow that runs them
 - [x] React frontend
 - [x] PostgreSQL with Flyway and Docker Compose
-- [ ] Login
+- [x] Light and dark theme
+- [x] Accounts with email and password; every user sees only their own groups
+- [ ] Online with HTTPS and its own address
+- [ ] Sign in with Google
+- [ ] Install it as an app on Android and iPhone (PWA)
