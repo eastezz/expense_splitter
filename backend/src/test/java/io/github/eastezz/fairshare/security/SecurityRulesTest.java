@@ -7,12 +7,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import io.github.eastezz.fairshare.TestUsers;
+import io.github.eastezz.fairshare.user.UserAccountRepository;
 
 /** Checks the rules in SecurityConfig: who may call what, and the CSRF protection. */
 @SpringBootTest
@@ -21,6 +25,14 @@ class SecurityRulesTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private UserAccountRepository userAccountRepository;
+
+	@BeforeEach
+	void createTestUser() {
+		TestUsers.ensure(userAccountRepository, TestUsers.ANNA);
+	}
 
 	@Test
 	void apiWithoutLoginReturns401AsJson() throws Exception {

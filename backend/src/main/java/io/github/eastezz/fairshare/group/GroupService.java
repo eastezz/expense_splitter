@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.eastezz.fairshare.user.CurrentUser;
+
 /**
  * Business logic for groups. The controller only handles HTTP; this class talks to the
  * repository and runs each method inside a database transaction.
@@ -15,13 +17,16 @@ public class GroupService {
 
 	private final GroupRepository groupRepository;
 
-	public GroupService(GroupRepository groupRepository) {
+	private final CurrentUser currentUser;
+
+	public GroupService(GroupRepository groupRepository, CurrentUser currentUser) {
 		this.groupRepository = groupRepository;
+		this.currentUser = currentUser;
 	}
 
-	/** Saves a new group and returns it with its generated id. */
+	/** Saves a new group that belongs to the logged-in user and returns it with its generated id. */
 	public GroupResponse create(CreateGroupRequest request) {
-		Group saved = groupRepository.save(new Group(request.name().trim()));
+		Group saved = groupRepository.save(new Group(request.name().trim(), currentUser.require()));
 		return GroupResponse.from(saved);
 	}
 
