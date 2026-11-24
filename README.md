@@ -27,7 +27,7 @@ Then open http://localhost:3000 and create an account. The backend is also reach
 
 ## Accounts and login
 
-Everyone creates their own account with an email and a password and only sees their own groups.
+Everyone creates their own account, with an email and a password or with "Continue with Google", and only sees their own groups.
 
 - Passwords are stored only as BCrypt hashes (salted and deliberately slow), never as text. A password needs at least 8 characters and at most 72 bytes, because BCrypt ignores everything after 72 bytes.
 - After the login, Spring Security keeps the user in a server-side session. The browser only gets the session id, in an `HttpOnly` and `SameSite=Lax` cookie that JavaScript can't read. A new session id is created at every login (protection against session fixation).
@@ -35,6 +35,26 @@ Everyone creates their own account with an email and a password and only sees th
 - Every endpoint under `/api` except `/api/health` and `/api/auth/**` needs a login and answers 401 without one. Another user's group answers 404, exactly like a group that doesn't exist, so nobody can find out which groups exist.
 - A wrong email and a wrong password give the same answer, so nobody can find out which emails have an account.
 - The sessions live in the backend's memory, so restarting the backend logs everybody out. The data stays.
+
+### Continue with Google
+
+"Continue with Google" uses Spring Security's OAuth 2.0 / OpenID Connect login. It is only switched on when a Google client is configured; without one, the button is hidden and everything else works the same.
+
+- The first Google login creates an account without a password. If an account with the same email already exists and Google has verified that email, the Google account is connected to it, so both ways of logging in lead to the same groups. Next time the account is found by Google's id, even if the email at Google changed.
+- After Google confirms who the person is, the backend logs that account in exactly like a password login, so all the rules above apply in the same way.
+
+To switch it on for your own copy:
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), open **Google Auth Platform**, set up the consent screen (type *External*, publishing status *Testing*) and add your Google account as a test user.
+2. Under **Clients**, create an OAuth client of type *Web application* with the redirect URIs `http://localhost:3000/login/oauth2/code/google` (Docker) and `http://localhost:5173/login/oauth2/code/google` (Vite dev server).
+3. Put its values into `.env` (see `.env.example`) and restart with `docker compose up --build`:
+
+   ```
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   ```
+
+   `.env` is ignored by Git, so the secret never ends up in the repository. Without Docker, set both as environment variables before `.\mvnw.cmd spring-boot:run`.
 
 ## Example: settling a trip
 
@@ -109,6 +129,8 @@ Everything except `/api/health` and `/api/auth/**` needs a login, and a group ca
 | POST | `/api/auth/login` | Log in; the answer sets the session cookie |
 | POST | `/api/auth/logout` | Log out and end the session |
 | GET | `/api/auth/me` | The logged-in user, or 401 |
+| GET | `/api/auth/providers` | Whether "Continue with Google" is switched on |
+| GET | `/oauth2/authorization/google` | Starts the Google login (a browser link, not a fetch) |
 | POST | `/api/groups` | Create a group |
 | GET | `/api/groups` | List your groups |
 | GET | `/api/groups/{id}` | Get one group |
@@ -130,14 +152,14 @@ cd backend
 .\mvnw.cmd verify
 ```
 
-The 95 backend tests check the split rounding, the balances, the settle-up (including a property test over 500 random groups), every endpoint with MockMvc including the error cases, and an end-to-end test that pays all suggested transfers and ends with every balance at 0. They also check the security rules: registration and BCrypt hashing, login, logout, 401 without login, 403 without CSRF token, and that another user's group answers 404 on every endpoint.
+The 106 backend tests check the split rounding, the balances, the settle-up (including a property test over 500 random groups), every endpoint with MockMvc including the error cases, and an end-to-end test that pays all suggested transfers and ends with every balance at 0. They also check the security rules: registration and BCrypt hashing, login, logout, 401 without login, 403 without CSRF token, that another user's group answers 404 on every endpoint, and the Google login with a made-up client (redirect to Google, new or connected account, unverified email).
 
 ```powershell
 cd frontend
 npm test
 ```
 
-The 41 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances, the error messages, the login and register forms, and that a visitor who isn't logged in is sent to the login page.
+The 44 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances, the error messages, the login and register forms, and that a visitor who isn't logged in is sent to the login page.
 
 GitHub Actions runs three jobs on every push to `main` and on every pull request: the backend tests, the frontend lint, tests and build, and a Docker build of both images.
 
@@ -150,5 +172,5 @@ GitHub Actions runs three jobs on every push to `main` and on every pull request
 - [x] Light and dark theme
 - [x] Accounts with email and password; every user sees only their own groups
 - [ ] Online with HTTPS and its own address
-- [ ] Sign in with Google
+- [x] Continue with Google
 - [ ] Install it as an app on Android and iPhone (PWA)
