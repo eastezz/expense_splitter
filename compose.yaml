@@ -25,6 +25,9 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-fairshare}
       DB_USER: ${POSTGRES_USER:-fairshare}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-fairshare}
+      # "Sign in with Google": only switched on when these are set in .env (empty = off).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

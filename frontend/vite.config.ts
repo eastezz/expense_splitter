@@ -9,6 +9,9 @@ export default defineConfig({
       // During `npm run dev`, send every request that starts with /api
       // to the Spring Boot backend running on port 8080.
       '/api': 'http://localhost:8080',
+      // The two addresses of "Sign in with Google" are handled by the backend as well.
+      '/oauth2': 'http://localhost:8080',
+      '/login/oauth2': 'http://localhost:8080',
     },
   },
 })
