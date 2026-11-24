@@ -26,6 +26,11 @@ public class AccountUserDetailsService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String email) {
 		UserAccount account = userAccountRepository.findByEmail(UserAccount.normalizeEmail(email))
 			.orElseThrow(() -> new UsernameNotFoundException("No account for " + email));
+		if (account.getPasswordHash() == null) {
+			// This account only signs in with Google, so a password can't be right.
+			// To the user it looks exactly like a wrong password ("Wrong email or password").
+			throw new UsernameNotFoundException("No password for " + email);
+		}
 		// Spring's own User class: the email is the "username"; we don't use roles (yet).
 		return User.withUsername(account.getEmail()).password(account.getPasswordHash()).roles("USER").build();
 	}

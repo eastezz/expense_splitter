@@ -86,6 +86,16 @@ class AuthControllerTest {
 	}
 
 	@Test
+	void passwordLoginToAGoogleOnlyAccountGivesTheNormalAnswer() throws Exception {
+		// An account from "Sign in with Google" has no password; trying one must not crash.
+		userAccountRepository.save(UserAccount.fromGoogle("hanna@gmail.com", "google-sub-hanna"));
+
+		login("hanna@gmail.com", "any-password")
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.detail").value("Wrong email or password"));
+	}
+
+	@Test
 	void meWithoutLoginReturns401() throws Exception {
 		mockMvc.perform(get("/api/auth/me"))
 			.andExpect(status().isUnauthorized())

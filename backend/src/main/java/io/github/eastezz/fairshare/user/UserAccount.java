@@ -13,7 +13,8 @@ import jakarta.persistence.Table;
 /**
  * A registered person who can log in (stored in the table "users").
  * Called UserAccount, not User, so it is not mixed up with Spring Security's own User class.
- * The password is never stored, only its BCrypt hash.
+ * The password is never stored, only its BCrypt hash. An account that was created with
+ * "Sign in with Google" has no password of its own (passwordHash is null) but a googleId.
  */
 @Entity
 @Table(name = "users")
@@ -26,8 +27,13 @@ public class UserAccount {
 	@Column(nullable = false, unique = true, length = 254)
 	private String email;
 
-	@Column(nullable = false, length = 60)
+	/** BCrypt hash of the password, or null for an account that only signs in with Google. */
+	@Column(length = 60)
 	private String passwordHash;
+
+	/** Google's permanent id for this person (the "sub" claim), or null if Google was never used. */
+	@Column(unique = true)
+	private String googleId;
 
 	@Column(nullable = false, updatable = false)
 	private Instant createdAt;
@@ -41,6 +47,18 @@ public class UserAccount {
 		this.email = normalizeEmail(email);
 		this.passwordHash = passwordHash;
 		this.createdAt = Instant.now();
+	}
+
+	/** Creates an account for someone who signed in with Google: no password, but the Google id. */
+	public static UserAccount fromGoogle(String email, String googleId) {
+		UserAccount account = new UserAccount(email, null);
+		account.googleId = googleId;
+		return account;
+	}
+
+	/** Connects an existing account with a Google account, so both ways of logging in lead here. */
+	public void linkGoogle(String googleId) {
+		this.googleId = googleId;
 	}
 
 	/**
@@ -66,6 +84,10 @@ public class UserAccount {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	public String getGoogleId() {
+		return googleId;
 	}
 
 }

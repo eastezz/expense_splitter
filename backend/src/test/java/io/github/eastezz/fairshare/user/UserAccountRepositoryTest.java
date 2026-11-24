@@ -38,4 +38,13 @@ class UserAccountRepositoryTest {
 			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	@Test
+	void savesGoogleAccountWithoutPassword() {
+		userAccountRepository.saveAndFlush(UserAccount.fromGoogle("Greta@Gmail.com", "google-sub-123"));
+
+		UserAccount found = userAccountRepository.findByGoogleId("google-sub-123").orElseThrow();
+		assertThat(found.getEmail()).isEqualTo("greta@gmail.com");
+		assertThat(found.getPasswordHash()).isNull();
+	}
+
 }
