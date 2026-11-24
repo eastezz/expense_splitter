@@ -96,6 +96,14 @@ class AuthControllerTest {
 	}
 
 	@Test
+	void googleIsSwitchedOffWithoutClientId() throws Exception {
+		// Tests and CI run without GOOGLE_CLIENT_ID, so the button must stay hidden.
+		mockMvc.perform(get("/api/auth/providers"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.google").value(false));
+	}
+
+	@Test
 	void meWithoutLoginReturns401() throws Exception {
 		mockMvc.perform(get("/api/auth/me"))
 			.andExpect(status().isUnauthorized())

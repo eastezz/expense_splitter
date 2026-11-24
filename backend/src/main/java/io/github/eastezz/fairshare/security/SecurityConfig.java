@@ -1,5 +1,6 @@
 package io.github.eastezz.fairshare.security;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -29,8 +32,17 @@ public class SecurityConfig {
 			"{\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"Not logged in\"}";
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository)
+	SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository,
+			ObjectProvider<ClientRegistrationRepository> googleLogin, GoogleLoginSuccessHandler googleLoginSuccessHandler)
 			throws Exception {
+		// "Sign in with Google" only when GoogleLoginConfig is active (GOOGLE_CLIENT_ID is set).
+		// It adds two addresses: /oauth2/authorization/google (sends the browser to Google)
+		// and /login/oauth2/code/google (where Google sends the browser back).
+		if (googleLogin.getIfAvailable() != null) {
+			http.oauth2Login(oauth2 -> oauth2
+				.successHandler(googleLoginSuccessHandler)
+				.failureHandler(new SimpleUrlAuthenticationFailureHandler("/login?error=google")));
+		}
 		http
 			.authorizeHttpRequests(auth -> auth
 				// Open to everyone: the health check and register, login, logout, "who am I".

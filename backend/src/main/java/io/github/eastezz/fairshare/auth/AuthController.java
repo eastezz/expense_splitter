@@ -1,17 +1,20 @@
 package io.github.eastezz.fairshare.auth;
 
 import java.net.URI;
+import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,9 +34,22 @@ public class AuthController {
 
 	private final SecurityContextRepository securityContextRepository;
 
-	public AuthController(AuthService authService, SecurityContextRepository securityContextRepository) {
+	private final ObjectProvider<ClientRegistrationRepository> googleLogin;
+
+	public AuthController(AuthService authService, SecurityContextRepository securityContextRepository,
+			ObjectProvider<ClientRegistrationRepository> googleLogin) {
 		this.authService = authService;
 		this.securityContextRepository = securityContextRepository;
+		this.googleLogin = googleLogin;
+	}
+
+	/**
+	 * GET /api/auth/providers: which other ways of logging in are switched on, e.g. {"google":true}.
+	 * The login page only shows the "Sign in with Google" button when Google is configured.
+	 */
+	@GetMapping("/providers")
+	public Map<String, Boolean> providers() {
+		return Map.of("google", googleLogin.getIfAvailable() != null);
 	}
 
 	/** POST /api/auth/register: creates an account, answers 201 Created (without any password). */
