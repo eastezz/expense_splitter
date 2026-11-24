@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The expense_splitter app icon: one coin, split into two shares.
+       The blue background fills the whole square, because phones cut their own shape (circle, rounded
+       square) out of it. The symbol stays inside the middle 60 %, so no shape can cut it off. -->
+  <rect width="512" height="512" fill="#1f6feb"/>
+  <!-- Left half of the coin -->
+  <path d="M 244 136 A 120 120 0 0 0 244 376 Z" fill="#ffffff"/>
+  <!-- Right half of the coin, a little lighter: the other person's share -->
+  <path d="M 268 136 A 120 120 0 0 1 268 376 Z" fill="#cfe2ff"/>
+</svg>
