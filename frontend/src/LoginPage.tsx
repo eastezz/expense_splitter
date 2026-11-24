@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { login } from './api'
 import { useAuth } from './auth'
 import './AuthPage.css'
+import GoogleButton from './GoogleButton'
 import { useToast } from './toast'
 
 /**
@@ -19,7 +20,12 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   // The error from the last attempt (for example "Wrong email or password"), or null.
-  const [error, setError] = useState<string | null>(null)
+  // After a failed Google login the backend sends the browser to /login?error=google.
+  const [error, setError] = useState<string | null>(
+    new URLSearchParams(location.search).get('error') === 'google'
+      ? 'Signing in with Google did not work. Please try again.'
+      : null,
+  )
   // True while the request is on its way, so the button can't be clicked twice.
   const [busy, setBusy] = useState(false)
 
@@ -67,6 +73,7 @@ function LoginPage() {
         <button type="submit" disabled={busy || email.trim() === '' || password === ''}>
           {busy ? 'Logging in…' : 'Log in'}
         </button>
+        <GoogleButton />
       </form>
       {error && (
         <p role="alert" className="error">

@@ -67,6 +67,19 @@ it('shows the error and stays on the page when the login fails', async () => {
   expect(screen.getByRole('button', { name: 'Log in' })).toBeEnabled()
 })
 
+it('explains a failed Google login', () => {
+  // The backend sends the browser to /login?error=google when Google didn't work out.
+  render(
+    <MemoryRouter initialEntries={['/login?error=google']}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Signing in with Google did not work')
+})
+
 it('keeps the button disabled until both fields are filled in', async () => {
   const user = userEvent.setup()
   renderLoginPage()

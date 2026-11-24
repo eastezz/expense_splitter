@@ -9,7 +9,7 @@ import UserMenu from './UserMenu'
 /** Shows the menu for the given user, with a stand-in for the login page at /login. */
 function renderUserMenu(user: User | null, setUser = vi.fn()) {
   render(
-    <AuthContext value={{ user, setUser }}>
+    <AuthContext value={{ user, setUser, googleLogin: false }}>
       <MemoryRouter>
         <UserMenu />
         <Routes>

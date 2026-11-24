@@ -70,3 +70,42 @@
   text-align: center;
   color: var(--color-text-muted);
 }
+
+/* A thin line with "or" in the middle, between the normal form and the Google button. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9rem 0 0.2rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Google's guidelines: white (or dark) button with the coloured "G" and dark text. */
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.google-button:hover {
+  border-color: var(--color-text-muted);
+  background-color: var(--color-surface-hover);
+}

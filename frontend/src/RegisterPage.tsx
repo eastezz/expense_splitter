@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import { login, register } from './api'
 import { useAuth } from './auth'
 import './AuthPage.css'
+import GoogleButton from './GoogleButton'
 import { useToast } from './toast'
 
 /** The backend needs at least this many characters (see RegisterRequest.java). */
@@ -83,6 +84,7 @@ function RegisterPage() {
         <button type="submit" disabled={!canSubmit}>
           {busy ? 'Creating account…' : 'Create account'}
         </button>
+        <GoogleButton />
       </form>
       {error && (
         <p role="alert" className="error">

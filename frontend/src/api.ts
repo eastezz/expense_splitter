@@ -109,6 +109,25 @@ export async function logout(): Promise<void> {
   await throwIfNotOk(response)
 }
 
+/** Which other ways of logging in the backend has switched on (GET /api/auth/providers). */
+export type AuthProviders = {
+  google: boolean
+}
+
+/** Asks the backend whether "Sign in with Google" is available. Any problem counts as "no". */
+export async function getAuthProviders(): Promise<AuthProviders> {
+  try {
+    const response = await fetch('/api/auth/providers')
+    if (!response.ok) {
+      return { google: false }
+    }
+    const providers: Partial<AuthProviders> = await response.json()
+    return { google: providers.google === true }
+  } catch {
+    return { google: false }
+  }
+}
+
 /** Who is logged in right now (GET /api/auth/me), or null if nobody is (the backend answers 401). */
 export async function getCurrentUser(): Promise<User | null> {
   const response = await fetch('/api/auth/me')
