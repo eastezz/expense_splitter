@@ -4,6 +4,7 @@ import AuthProvider from './AuthProvider'
 import BalancesPage from './BalancesPage'
 import GroupPage from './GroupPage'
 import GroupsPage from './GroupsPage'
+import InstallButton from './InstallButton'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
 import RequireLogin from './RequireLogin'
@@ -18,12 +19,14 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         {/* The bar on top of every page: the app name (a link to the start page),
-            the logged-in user with "Log out", and the theme button. */}
+            "Install app" when the browser offers it, the logged-in user with "Log out",
+            and the theme button. */}
         <header className="app-header">
           <h1 className="app-name">
             <Link to="/">expense_splitter</Link>
           </h1>
           <div className="header-actions">
+            <InstallButton />
             <UserMenu />
             <ThemeToggle />
           </div>
