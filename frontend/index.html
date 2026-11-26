@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>expense_splitter</title>
+    <meta name="description" content="Split group expenses and see who owes whom." />
+    <!-- Lets phones install the app; name, icons and colors are in the manifest. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- iPhone/iPad home screen icon (Safari doesn't use the icons from the manifest). -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Color of the browser's address bar and the phone's status bar, matching the page background. -->
+    <meta name="theme-color" content="#f6f8fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+    <!-- iPhone: open the app from the home screen without Safari's bars, with this name under the icon. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="expense_splitter" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <script>
       // Picks the theme before the page is drawn, so it never flashes in the wrong colors.
       // The choice saved by the theme button wins; otherwise follow the phone or computer setting.
