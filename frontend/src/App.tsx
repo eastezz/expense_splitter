@@ -5,6 +5,7 @@ import BalancesPage from './BalancesPage'
 import GroupPage from './GroupPage'
 import GroupsPage from './GroupsPage'
 import InstallButton from './InstallButton'
+import IosInstallHint from './IosInstallHint'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
 import RequireLogin from './RequireLogin'
@@ -32,6 +33,8 @@ function App() {
           </div>
         </header>
         <main>
+          {/* Only on iPhones and iPads: how to install the app from Safari. */}
+          <IosInstallHint />
           {/* Routes shows the first Route whose path matches the current URL.
               The pages with groups and money are wrapped in RequireLogin. */}
           <Routes>
