@@ -4,7 +4,7 @@
 
 // Change this name whenever the list of saved files changes: the browser then installs the new
 // version and the "activate" step below deletes the old saved files.
-const CACHE_NAME = 'expense-splitter-v1'
+const CACHE_NAME = 'expense-splitter-v2'
 
 // The files every page needs. The JavaScript and CSS files have a new name after every build,
 // so they are saved later, the first time they are loaded.
@@ -16,6 +16,7 @@ const APP_SHELL = [
   '/icon-512.png',
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
+  '/offline.html',
 ]
 
 // Runs once when the browser installs this service worker: save the app shell.
@@ -66,11 +67,12 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     // Opening a page: network first, so you always get the newest version. Every page of the app
-    // is the same index.html, so it is saved under "/". Without internet, that saved copy is used.
+    // is the same index.html, so it is saved under "/". Without internet, that saved copy is used,
+    // and if even that is missing, the small offline page.
     event.respondWith(
       fetch(request)
         .then((response) => remember('/', response))
-        .catch(() => caches.match('/')),
+        .catch(() => caches.match('/').then((saved) => saved ?? caches.match('/offline.html'))),
     )
     return
   }
