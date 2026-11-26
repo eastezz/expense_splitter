@@ -56,6 +56,20 @@ To switch it on for your own copy:
 
    `.env` is ignored by Git, so the secret never ends up in the repository. Without Docker, set both as environment variables before `.\mvnw.cmd spring-boot:run`.
 
+## Install it as an app
+
+expense_splitter is a Progressive Web App (PWA): it can be installed like a normal app, opens in its own window without the browser bar, and still opens without internet.
+
+- **Android, Chrome or Edge:** click **Install app** in the header (it only appears when the browser offers an install).
+- **iPhone and iPad:** a small hint explains it: tap the Share button and then **Add to Home Screen**.
+
+How it works:
+
+- [`manifest.webmanifest`](frontend/public/manifest.webmanifest) gives the app its name, colors and icons. The icons are made from [`icon.svg`](frontend/public/icon.svg): 192 and 512 px with rounded corners, a full-square 512 px "maskable" icon for Android, and a 180 px `apple-touch-icon.png` for iOS.
+- The service worker [`sw.js`](frontend/public/sw.js) saves the app's own files (page, JavaScript, CSS, icons). Pages come from the network first and from the saved copy without internet; when nothing is saved yet, it shows [`offline.html`](frontend/public/offline.html). It never saves anything from `/api`, `/oauth2`, `/login/oauth2` or `/logout`, so data and logins always come fresh from the server.
+- The service worker is only registered in the production build, not during `npm run dev`. nginx sends `sw.js`, `index.html` and the manifest with `Cache-Control: no-cache`, so an update is never stuck, and the hashed files in `/assets/` with a one-year cache.
+- Installing needs HTTPS, except on `localhost`. On a phone it therefore only works once the app is online with HTTPS.
+
 ## Example: settling a trip
 
 Anna, Ben and Cem go on a trip. Anna pays 90 EUR for the hotel and Ben pays 30 EUR for pizza, both split equally by three. The app shows these balances (positive = gets money back, negative = owes money):
@@ -159,7 +173,7 @@ cd frontend
 npm test
 ```
 
-The 44 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances, the error messages, the login and register forms, and that a visitor who isn't logged in is sent to the login page.
+The 53 frontend tests use Vitest and React Testing Library. They render the pages with a fake backend and check what the user sees, for example the balances, the error messages, the login and register forms, that a visitor who isn't logged in is sent to the login page, the Install app button, the iPhone hint, and that the service worker is only registered in the production build.
 
 GitHub Actions runs three jobs on every push to `main` and on every pull request: the backend tests, the frontend lint, tests and build, and a Docker build of both images.
 
@@ -173,4 +187,4 @@ GitHub Actions runs three jobs on every push to `main` and on every pull request
 - [x] Accounts with email and password; every user sees only their own groups
 - [ ] Online with HTTPS and its own address
 - [x] Continue with Google
-- [ ] Install it as an app on Android and iPhone (PWA)
+- [x] Install it as an app on Android and iPhone (PWA)
