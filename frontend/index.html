@@ -25,6 +25,12 @@
         const saved = localStorage.getItem('theme')
         const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        // A theme chosen with the button also colors the browser bar (the same colors as in theme.ts).
+        if (saved) {
+          for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+            meta.content = dark ? '#0d1117' : '#f6f8fa'
+          }
+        }
       } catch {
         // localStorage can be blocked (for example in private mode); then the light theme is used.
       }

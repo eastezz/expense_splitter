@@ -31,3 +31,21 @@ it('switches from dark to light', async () => {
   expect(document.documentElement.dataset.theme).toBe('light')
   expect(localStorage.getItem('theme')).toBe('light')
 })
+
+it('gives the browser bar the color of the chosen theme', async () => {
+  const user = userEvent.setup()
+  // The two theme-color tags from index.html: one for a light, one for a dark system setting.
+  document.head.innerHTML =
+    '<meta name="theme-color" content="#f6f8fa" media="(prefers-color-scheme: light)">' +
+    '<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">'
+  document.documentElement.dataset.theme = 'light'
+  render(<ThemeToggle />)
+
+  await user.click(screen.getByRole('button', { name: 'Switch to dark theme' }))
+
+  const colors = [...document.querySelectorAll('meta[name="theme-color"]')].map((meta) =>
+    meta.getAttribute('content'),
+  )
+  expect(colors).toEqual(['#0d1117', '#0d1117'])
+  document.head.innerHTML = ''
+})
