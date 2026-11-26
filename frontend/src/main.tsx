@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
+import { registerServiceWorker } from './registerServiceWorker'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -11,3 +12,6 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+// Lets the app work offline and be installed on a phone (only in the real build).
+registerServiceWorker()
